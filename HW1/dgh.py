@@ -48,7 +48,7 @@ class DGHInfo:
             cur_node = node
 
             while cur_node.level > highest_level:
-                cur_node = node.parent
+                cur_node = cur_node.parent
 
             new_nodes.append(cur_node)
 
