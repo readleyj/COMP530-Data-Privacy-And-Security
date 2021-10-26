@@ -1,25 +1,14 @@
-##############################################################################
-# This skeleton was created by Mandana Bagheri (mmarzijarani20@ku.edu.tr)    #
-# Note: requires Python 3.5+                                                 #
-##############################################################################
-
 import csv
 import glob
 import os
 import sys
 from copy import deepcopy
 from typing import Optional
+from dgh import DGHNode, DGHInfo
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     sys.stdout.write("Requires Python 3.x.\n")
     sys.exit(1)
-
-##############################################################################
-# Helper Functions                                                           #
-# These functions are provided to you as starting points. They may help your #
-# code remain structured and organized. But you are not required to use      #
-# them. You can modify them or implement your own helper functions.          #
-##############################################################################
 
 
 def read_dataset(dataset_file: str):
@@ -65,10 +54,30 @@ def read_DGH(DGH_file: str):
     Args:
         DGH_file (str): the path to DGH file.
     """
-    # TODO: complete this code so that a DGH file is read and returned
-    # in your own desired format.
-    with open(DGH_file) as f:
-        pass
+
+    last_node_by_level = []
+
+    with open(DGH_file) as file:
+        for line in file:
+            level = line.rstrip().count('\t')
+            attribute = line.strip()
+
+            if level == 0:
+                cur_node = DGHNode(attribute, parent=None, level=level)
+            else:
+                parent_node = last_node_by_level[level - 1]
+                cur_node = DGHNode(
+                    attribute, parent=parent_node, level=level)
+                parent_node.children.append(cur_node)
+
+            if level >= len(last_node_by_level):
+                last_node_by_level.append(cur_node)
+
+            last_node_by_level[level] = cur_node
+
+    root_node = last_node_by_level[0]
+
+    return DGHInfo(root_node)
 
 
 def read_DGHs(DGH_folder: str) -> dict:
