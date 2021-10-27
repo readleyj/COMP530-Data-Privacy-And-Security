@@ -4,6 +4,8 @@ import os
 import sys
 from copy import deepcopy
 from typing import Optional
+import random
+
 from dgh import DGHNode, DGHInfo
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
@@ -91,6 +93,7 @@ def read_DGHs(DGH_folder: str) -> dict:
             are DGHs in your desired format.
     """
     DGHs = {}
+
     for DGH_file in glob.glob(DGH_folder + "/*.txt"):
         attribute_name = os.path.basename(DGH_file)[:-4]
         DGHs[attribute_name] = read_DGH(DGH_file)
@@ -122,8 +125,16 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
            and len(raw_dataset[0]) == len(anonymized_dataset[0]))
     DGHs = read_DGHs(DGH_folder)
 
-    # TODO: complete this function.
-    return -1
+    total_MD_cost = 0
+
+    for attribute, dgh_info in DGHs.items():
+        for idx in range(len(raw_dataset)):
+            raw_record, anonymized_record = raw_dataset[idx], anonymized_dataset[idx]
+
+            total_MD_cost += dgh_info.level_dist_between_values(
+                raw_record[attribute], anonymized_record[attribute])
+
+    return total_MD_cost
 
 
 def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
@@ -161,8 +172,35 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     raw_dataset = read_dataset(raw_dataset_file)
     DGHs = read_DGHs(DGH_folder)
 
-    anonymized_dataset = []
-    # TODO: complete this function.
+    anonymized_dataset = [None] * len(raw_dataset)
+
+    dataset_indices = list(range(len(raw_dataset)))
+    random.shuffle(dataset_indices)
+
+    num_pure_clusters = (len(dataset_indices) // k) - 1
+    cluster_ranges = [[cluster_num * k, (cluster_num + 1) * k - 1]
+                      for cluster_num in range(num_pure_clusters)] + [[num_pure_clusters * k, len(dataset_indices) - 1]]
+    index_ranges = [[dataset_indices[idx] for idx in
+                     range(cluster_range[0], cluster_range[1] + 1)] for cluster_range in cluster_ranges]
+    clusters = [[raw_dataset[idx] for idx in index_range]
+                for index_range in index_ranges]
+
+    for cluster_idx in range(len(clusters)):
+        cluster = clusters[cluster_idx]
+        index_range = index_ranges[cluster_idx]
+
+        for attribute, dgh_info in DGHs.items():
+            attribute_values = [record[attribute] for record in cluster]
+            lca_value = dgh_info.lowest_common_ancestor(attribute_values)
+
+            for record in cluster:
+                record[attribute] = lca_value
+
+        for idx in range(len(index_range)):
+            record_idx = index_range[idx]
+            record = cluster[idx]
+
+            anonymized_dataset[record_idx] = record
 
     write_dataset(anonymized_dataset, output_file)
 
