@@ -176,9 +176,6 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
     return total_LM_cost
 
-    # TODO: complete this function.
-    return -1
-
 
 def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
                       output_file: str):
