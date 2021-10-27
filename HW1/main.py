@@ -5,8 +5,10 @@ import sys
 from copy import deepcopy
 from typing import Optional
 import random
+import heapq
 
 from dgh import DGHNode, DGHInfo
+from util import calculate_equivalence_class
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     sys.stdout.write("Requires Python 3.x.\n")
@@ -207,12 +209,7 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         cluster = clusters[cluster_idx]
         index_range = index_ranges[cluster_idx]
 
-        for attribute, dgh_info in DGHs.items():
-            attribute_values = [record[attribute] for record in cluster]
-            lca_value = dgh_info.lowest_common_ancestor(attribute_values)
-
-            for record in cluster:
-                record[attribute] = lca_value
+        calculate_equivalence_class(DGHs, cluster)
 
         for idx in range(len(index_range)):
             record_idx = index_range[idx]
@@ -236,8 +233,64 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     raw_dataset = read_dataset(raw_dataset_file)
     DGHs = read_DGHs(DGH_folder)
 
-    anonymized_dataset = []
-    # TODO: complete this function.
+    def calc_dist_between_records(record1, record2):
+        raw_records = [record1, record2]
+        anonymized_records = [record1.copy(), record2.copy()]
+
+        total_MD_cost = 0
+
+        calculate_equivalence_class(DGHs, anonymized_records)
+
+        for attribute, dgh_info in DGHs.items():
+            for idx in range(len(raw_records)):
+                raw_record, anonymized_record = raw_records[idx], anonymized_records[idx]
+
+                total_MD_cost += dgh_info.level_dist_between_values(
+                    raw_record[attribute], anonymized_record[attribute])
+
+        return total_MD_cost
+
+    anonymized_dataset = [None] * len(raw_dataset)
+    clustering_heap = []
+    last_cluster = None
+
+    unmarked_record_indices = set(range(len(raw_dataset)))
+    first_unmarked_index = 0
+
+    while len(unmarked_record_indices) >= k:
+        print(len(unmarked_record_indices))
+        cluster_size = k
+
+        if len(unmarked_record_indices) // k == 1 and len(unmarked_record_indices) % k > 0:
+            cluster_size = len(unmarked_record_indices)
+
+        rec = raw_dataset[first_unmarked_index]
+
+        for record_idx in unmarked_record_indices:
+            if record_idx == first_unmarked_index:
+                continue
+
+            record = raw_dataset[record_idx]
+
+            heapq.heappush(clustering_heap, [
+                calc_dist_between_records(rec, record), record_idx, record])
+
+        closest_entries = heapq.nsmallest(cluster_size - 1, clustering_heap)
+        entry_cluster = closest_entries + [[-1, first_unmarked_index, rec]]
+
+        record_cluster = [entry[2] for entry in entry_cluster]
+        record_indices = [entry[1] for entry in entry_cluster]
+
+        calculate_equivalence_class(DGHs, record_cluster)
+
+        for record_idx, record in zip(record_indices, record_cluster):
+            anonymized_dataset[record_idx] = record
+            unmarked_record_indices.remove(record_idx)
+
+        if unmarked_record_indices:
+            first_unmarked_index = min(unmarked_record_indices)
+
+        clustering_heap.clear()
 
     write_dataset(anonymized_dataset, output_file)
 
