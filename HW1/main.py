@@ -155,6 +155,27 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
            and len(raw_dataset[0]) == len(anonymized_dataset[0]))
     DGHs = read_DGHs(DGH_folder)
 
+    num_attrubutes = len(DGHs)
+    attribute_weight = 1 / num_attrubutes
+
+    total_LM_cost = 0
+
+    for attribute, dgh_info in DGHs.items():
+        dgh_total_leaves = dgh_info.total_num_leaves
+
+        record_lm_cost = 0
+
+        for record in anonymized_dataset:
+            attribute_val = record[attribute]
+            node_num_desc_leaf = dgh_info.value_to_desc_leaf_counts[attribute_val]
+            lm_val = (node_num_desc_leaf - 1) / (dgh_total_leaves)
+
+            record_lm_cost += attribute_weight * lm_val
+
+        total_LM_cost += record_lm_cost
+
+    return total_LM_cost
+
     # TODO: complete this function.
     return -1
 

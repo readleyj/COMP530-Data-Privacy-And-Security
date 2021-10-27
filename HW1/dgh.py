@@ -28,7 +28,7 @@ class DGHInfo:
 
     @property
     def total_num_leaves(self):
-        return self.get_value_desc_leaf_count[self.root_node.value]
+        return self.value_to_desc_leaf_counts[self.root_node.value]
 
     def level_dist_between_values(self, value1, value2):
         return abs(self.value_to_level_map[value1] - self.value_to_level_map[value2])
