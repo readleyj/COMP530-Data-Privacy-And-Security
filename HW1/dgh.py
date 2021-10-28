@@ -1,9 +1,11 @@
 class DGHNode:
-    def __init__(self, value, level, parent):
+    def __init__(self, attribute_name, value, level, parent):
+        self.attribute_name = attribute_name
         self.value = value
         self.level = level
         self.parent = parent
         self.children = []
+        self.ancestors = set()
         self.desc_leaf_count = None
 
     @property
@@ -61,6 +63,11 @@ class DGHInfo:
 
         return new_node_values[0]
 
+    def has_ancestor_with_value(self, value_1, value_2):
+        # Check if a node with value_1 is an ancestor of node with value_2
+        dgh_node_2 = self.value_to_node[value_2]
+        return value_1 in dgh_node_2.ancestors
+
     def _calc_desc_leaf_counts(self, node):
         if node.is_leaf:
             desc_leaf_count = 1
@@ -79,4 +86,5 @@ class DGHInfo:
         self.value_to_node[value] = node
 
         for child in node.children:
+            child.ancestors = set.union(node.ancestors, set([value]))
             self._traverse(child)

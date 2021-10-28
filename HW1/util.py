@@ -6,3 +6,7 @@ def calculate_equivalence_class(DGHs, record_cluster):
 
         for record in record_cluster:
             record[attribute] = lca_value
+
+
+def calculate_LM_cost_of_split(specialization_split):
+    return sum([node.LM_cost for node in specialization_split])

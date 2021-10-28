@@ -8,7 +8,8 @@ import random
 import heapq
 
 from dgh import DGHNode, DGHInfo
-from util import calculate_equivalence_class
+from util import calculate_LM_cost_of_split, calculate_equivalence_class
+from specialization import SpecializationNode
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     sys.stdout.write("Requires Python 3.x.\n")
@@ -52,7 +53,7 @@ def write_dataset(dataset, dataset_file: str) -> bool:
     return True
 
 
-def read_DGH(DGH_file: str):
+def read_DGH(DGH_file: str, attribute_name):
     """ Reads one DGH file and returns in desired format.
 
     Args:
@@ -67,11 +68,12 @@ def read_DGH(DGH_file: str):
             attribute = line.strip()
 
             if level == 0:
-                cur_node = DGHNode(attribute, parent=None, level=level)
+                cur_node = DGHNode(attribute_name=attribute_name, value=attribute,
+                                   parent=None, level=level)
             else:
                 parent_node = last_node_by_level[level - 1]
-                cur_node = DGHNode(
-                    attribute, parent=parent_node, level=level)
+                cur_node = DGHNode(attribute_name=attribute_name,
+                                   value=attribute, parent=parent_node, level=level)
                 parent_node.children.append(cur_node)
 
             if level >= len(last_node_by_level):
@@ -98,7 +100,7 @@ def read_DGHs(DGH_folder: str) -> dict:
 
     for DGH_file in glob.glob(DGH_folder + "/*.txt"):
         attribute_name = os.path.basename(DGH_file)[:-4]
-        DGHs[attribute_name] = read_DGH(DGH_file)
+        DGHs[attribute_name] = read_DGH(DGH_file, attribute_name)
 
     return DGHs
 
@@ -252,7 +254,6 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     anonymized_dataset = [None] * len(raw_dataset)
     clustering_heap = []
-    last_cluster = None
 
     unmarked_record_indices = set(range(len(raw_dataset)))
     first_unmarked_index = 0
@@ -306,10 +307,97 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         output_file (str): the path to the output dataset file.
     """
     raw_dataset = read_dataset(raw_dataset_file)
+    anonymized_dataset = [None] * len(raw_dataset)
     DGHs = read_DGHs(DGH_folder)
 
-    anonymized_dataset = []
-    # TODO: complete this function.
+    SpecializationNode.DGHs = DGHs
+    SpecializationNode.RAW_DATASET = raw_dataset
+
+    dgh_root_node_attributes_info = [
+        (DGH.root_node.attribute_name, DGH.root_node.value) for DGH in DGHs.values()]
+
+    dgh_root_nodes = [DGH.root_node for DGH in DGHs.values()]
+    specialization_tree_root_node = SpecializationNode(dgh_root_nodes)
+    specialization_tree_leaf_nodes = None
+
+    print(
+        specialization_tree_root_node.dgh_attribute_name_to_index_map['age'])
+
+    def specialize(specialization_leaf_nodes):
+        valid_splits = []
+        split_cost_diffs = []
+        new_specialization_tree_leaf_nodes = []
+
+        for specialization_node in specialization_leaf_nodes:
+            print(
+                ' '.join([node.value for node in specialization_node.dgh_nodes]))
+
+            for attribute_name in DGHs.keys():
+                new_specialization_nodes = []
+                new_dgh_nodes = specialization_node.dgh_nodes[:]
+
+                dgh_node_idx = specialization_node.dgh_attribute_name_to_index_map[attribute_name]
+                dgh_node = specialization_node.dgh_nodes[dgh_node_idx]
+
+                for child_dgh_node in dgh_node.children:
+                    new_dgh_nodes[dgh_node_idx] = child_dgh_node
+                    new_specialization_node = SpecializationNode(
+                        new_dgh_nodes, parent=specialization_node)
+
+                    new_specialization_nodes.append(new_specialization_node)
+
+                if all([node.num_records >= k for node in new_specialization_nodes]):
+                    valid_splits.append(new_specialization_nodes)
+                    split_cost_diffs.append(
+                        specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))
+
+            # for idx, dgh_node in enumerate(specialization_node.dgh_nodes):
+            #     new_specialization_nodes = []
+            #     new_dgh_nodes = specialization_node.dgh_nodes[:]
+
+            #     for child_dgh_node in dgh_node.children:
+            #         print(child_dgh_node.value)
+            #         new_dgh_nodes[idx] = child_dgh_node
+            #         print(
+            #             ' '.join([node.value for node in new_dgh_nodes]))
+            #         new_specialization_node = SpecializationNode(
+            #             new_dgh_nodes, parent=specialization_node)
+
+            #         new_specialization_nodes.append(new_specialization_node)
+
+            #     if all([node.num_records >= k for node in new_specialization_nodes]):
+            #         valid_splits.append(new_specialization_nodes)
+            #         split_cost_diffs.append(
+            #             specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))
+
+            if not valid_splits:
+                new_specialization_tree_leaf_nodes.append(specialization_node)
+                continue
+
+            best_split_index = max(range(len(split_cost_diffs)),
+                                   key=lambda idx: split_cost_diffs[idx])
+            best_split = valid_splits[best_split_index]
+
+            for best_split_leaf in best_split:
+                new_specialization_tree_leaf_nodes.append(best_split_leaf)
+
+        else:
+            for node1, node2 in zip(specialization_leaf_nodes, new_specialization_tree_leaf_nodes):
+                if node1 == node2:
+                    continue
+                else:
+                    break
+            else:
+                return new_specialization_tree_leaf_nodes
+
+            return specialize(new_specialization_tree_leaf_nodes)
+
+    specialization_tree_leaf_nodes = specialize(
+        [specialization_tree_root_node])
+
+    for specialization_node in specialization_tree_leaf_nodes:
+        for record_idx, record in specialization_node.anonymized_records:
+            anonymized_dataset[record_idx] = record
 
     write_dataset(anonymized_dataset, output_file)
 
