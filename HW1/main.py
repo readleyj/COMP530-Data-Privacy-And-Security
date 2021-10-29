@@ -30,7 +30,6 @@ def read_dataset(dataset_file: str):
         records = csv.DictReader(f)
         for row in records:
             result.append(row)
-    # print(result[0]['age']) # debug: testing.
     return result
 
 
@@ -260,7 +259,6 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     first_unmarked_index = 0
 
     while len(unmarked_record_indices) >= k:
-        print(len(unmarked_record_indices))
         cluster_size = k
 
         if len(unmarked_record_indices) // k == 1 and len(unmarked_record_indices) % k > 0:
