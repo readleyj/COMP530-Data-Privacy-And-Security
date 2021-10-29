@@ -357,4 +357,4 @@ print(
 
 
 # Sample usage:
-# python3 code.py clustering DGHs/ adult-hw1.csv result.csv 300
+# python3 main.py clustering DGHs/ adult-hw1.csv result.csv 300
