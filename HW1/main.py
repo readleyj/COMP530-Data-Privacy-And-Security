@@ -2,10 +2,9 @@ import csv
 import glob
 import os
 import sys
-from copy import deepcopy
-from typing import Optional
 import random
 import heapq
+import time
 
 from dgh import DGHNode, DGHInfo
 from util import calculate_equivalence_class
@@ -347,13 +346,18 @@ anonymized_file = sys.argv[4]
 k = int(sys.argv[5])
 
 function = eval(f"{algorithm}_anonymizer")
+
+start_time = time.time()
+
 function(raw_file, dgh_path, k, anonymized_file)
+
+end_time = time.time()
+elapsed_time = end_time - start_time
 
 cost_md = cost_MD(raw_file, anonymized_file, dgh_path)
 cost_lm = cost_LM(raw_file, anonymized_file, dgh_path)
 print(
-    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm}\n")
-
+    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm:.2f}\n\tElapsed Time: {elapsed_time:.2f}s")
 
 # Sample usage:
 # python3 main.py clustering DGHs/ adult-hw1.csv result.csv 300
