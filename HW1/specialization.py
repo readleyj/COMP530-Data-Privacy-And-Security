@@ -1,23 +1,12 @@
-from os import stat
+from util import calculate_LM_cost_of_split
 
-
-# Need to represent a specialization tree node somehow
-# Need to represent the tree itself
-# In each 'iteration', go through leaves of the specialization tree, go through each node of each leaf, and split
-# The number of nodes of each node should be maintained. Will be used to check whether k-anonymity is satisified
-# Need a way to apply a certain specialization to the dataset. Maybe a apply_specialization() method on the node class
-# 2 classes: SpecializationNode and SpecializationTree
-# SpecializationNode maintains the root node and leaf nodes
-# SpecializationNode has n-number of DGHNodes
-# Maybe should have DGHInfo instead
-# Need to efficiently count number of records satisfying specialization
 
 class SpecializationNode():
     DGHs = None
     RAW_DATASET = None
 
-    def __init__(self, dgh_nodes, parent=None):
-        self.dgh_nodes = dgh_nodes
+    def __init__(self, dgh_node_attribute_infos, parent=None):
+        self.dgh_node_attribute_infos = dgh_node_attribute_infos
         self.parent = parent
         self.children = []
         self.raw_records = None
@@ -32,12 +21,13 @@ class SpecializationNode():
 
         self.num_records = len(self.raw_records)
         self.LM_cost = self.calc_LM_cost()
-        self.dgh_attribute_name_to_index_map = {
-            node.attribute_name: idx for idx, node in enumerate(self.dgh_nodes)}
+
+        self.attribute_name_to_idx_map = {
+            attribute_info[0]: idx for idx, attribute_info in enumerate(self.dgh_node_attribute_infos)}
 
     def __eq__(self, other):
-        for dgh_node1, dgh_node2 in zip(self.dgh_nodes, other.dgh_nodes):
-            if dgh_node1.value != dgh_node2.value:
+        for (_, value1), (_, value2) in zip(self.dgh_node_attribute_infos, other.dgh_node_attribute_infos):
+            if value1 != value2:
                 return False
 
         return True
@@ -48,20 +38,18 @@ class SpecializationNode():
         for record_idx, record in data:
             num_matches = 0
 
-            for dgh_node in self.dgh_nodes:
-                attribute_name = dgh_node.attribute_name
-
-                node_value_1, node_value_2 = dgh_node.value, record[attribute_name]
+            for attribute_name, value in self.dgh_node_attribute_infos:
+                node_value_1, node_value_2 = value, record[attribute_name]
 
                 dgh_info = self.DGHs[attribute_name]
                 num_matches += int(dgh_info.has_ancestor_with_value(
-                    node_value_1, node_value_2)) or node_value_1 == node_value_2
+                    node_value_1, node_value_2))
 
-            if num_matches == len(self.dgh_nodes):
+            if num_matches == len(self.dgh_node_attribute_infos):
                 new_record = dict(record)
 
-                for dgh_node in self.dgh_nodes:
-                    new_record[dgh_node.attribute_name] = dgh_node.value
+                for attribute_name, value in self.dgh_node_attribute_infos:
+                    new_record[attribute_name] = value
 
                 raw_records.append((record_idx, record))
                 specialized_records.append((record_idx, new_record))
@@ -89,3 +77,54 @@ class SpecializationNode():
             total_LM_cost += record_lm_cost
 
         return total_LM_cost
+
+
+def specialize(specialization_leaf_nodes, DGHs, k):
+    new_specialization_tree_leaf_nodes = []
+
+    for specialization_node in specialization_leaf_nodes:
+        valid_splits = []
+        split_cost_diffs = []
+
+        for attribute_name, value in specialization_node.dgh_node_attribute_infos:
+            new_specialization_nodes = []
+            new_dgh_node_attribute_infos = specialization_node.dgh_node_attribute_infos[
+                :]
+
+            dgh_info = DGHs[attribute_name]
+            dgh_node = dgh_info.value_to_node[value]
+            attribute_idx = specialization_node.attribute_name_to_idx_map[attribute_name]
+
+            for child_dgh_node in dgh_node.children:
+                new_dgh_node_attribute_infos[attribute_idx] = (
+                    attribute_name, child_dgh_node.value)
+                new_specialization_node = SpecializationNode(
+                    new_dgh_node_attribute_infos[:], parent=specialization_node)
+                new_specialization_nodes.append(new_specialization_node)
+
+            if all([node.num_records >= k for node in new_specialization_nodes]):
+                valid_splits.append(new_specialization_nodes)
+                split_cost_diffs.append(
+                    specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))
+
+        if not valid_splits:
+            new_specialization_tree_leaf_nodes.append(specialization_node)
+            continue
+
+        best_split_index = max(range(len(split_cost_diffs)),
+                               key=lambda idx: split_cost_diffs[idx])
+        best_split = valid_splits[best_split_index]
+
+        for best_split_leaf in best_split:
+            new_specialization_tree_leaf_nodes.append(best_split_leaf)
+
+    else:
+        for node1, node2 in zip(specialization_leaf_nodes, new_specialization_tree_leaf_nodes):
+            if node1 == node2:
+                continue
+            else:
+                break
+        else:
+            return specialization_leaf_nodes
+
+        return specialize(new_specialization_tree_leaf_nodes, DGHs, k)

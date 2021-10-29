@@ -8,8 +8,8 @@ import random
 import heapq
 
 from dgh import DGHNode, DGHInfo
-from util import calculate_LM_cost_of_split, calculate_equivalence_class
-from specialization import SpecializationNode
+from util import calculate_equivalence_class
+from specialization import SpecializationNode, specialize
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
     sys.stdout.write("Requires Python 3.x.\n")
@@ -316,84 +316,12 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     dgh_root_node_attributes_info = [
         (DGH.root_node.attribute_name, DGH.root_node.value) for DGH in DGHs.values()]
 
-    dgh_root_nodes = [DGH.root_node for DGH in DGHs.values()]
-    specialization_tree_root_node = SpecializationNode(dgh_root_nodes)
+    specialization_tree_root_node = SpecializationNode(
+        dgh_root_node_attributes_info)
     specialization_tree_leaf_nodes = None
 
-    print(
-        specialization_tree_root_node.dgh_attribute_name_to_index_map['age'])
-
-    def specialize(specialization_leaf_nodes):
-        valid_splits = []
-        split_cost_diffs = []
-        new_specialization_tree_leaf_nodes = []
-
-        for specialization_node in specialization_leaf_nodes:
-            print(
-                ' '.join([node.value for node in specialization_node.dgh_nodes]))
-
-            for attribute_name in DGHs.keys():
-                new_specialization_nodes = []
-                new_dgh_nodes = specialization_node.dgh_nodes[:]
-
-                dgh_node_idx = specialization_node.dgh_attribute_name_to_index_map[attribute_name]
-                dgh_node = specialization_node.dgh_nodes[dgh_node_idx]
-
-                for child_dgh_node in dgh_node.children:
-                    new_dgh_nodes[dgh_node_idx] = child_dgh_node
-                    new_specialization_node = SpecializationNode(
-                        new_dgh_nodes, parent=specialization_node)
-
-                    new_specialization_nodes.append(new_specialization_node)
-
-                if all([node.num_records >= k for node in new_specialization_nodes]):
-                    valid_splits.append(new_specialization_nodes)
-                    split_cost_diffs.append(
-                        specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))
-
-            # for idx, dgh_node in enumerate(specialization_node.dgh_nodes):
-            #     new_specialization_nodes = []
-            #     new_dgh_nodes = specialization_node.dgh_nodes[:]
-
-            #     for child_dgh_node in dgh_node.children:
-            #         print(child_dgh_node.value)
-            #         new_dgh_nodes[idx] = child_dgh_node
-            #         print(
-            #             ' '.join([node.value for node in new_dgh_nodes]))
-            #         new_specialization_node = SpecializationNode(
-            #             new_dgh_nodes, parent=specialization_node)
-
-            #         new_specialization_nodes.append(new_specialization_node)
-
-            #     if all([node.num_records >= k for node in new_specialization_nodes]):
-            #         valid_splits.append(new_specialization_nodes)
-            #         split_cost_diffs.append(
-            #             specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))
-
-            if not valid_splits:
-                new_specialization_tree_leaf_nodes.append(specialization_node)
-                continue
-
-            best_split_index = max(range(len(split_cost_diffs)),
-                                   key=lambda idx: split_cost_diffs[idx])
-            best_split = valid_splits[best_split_index]
-
-            for best_split_leaf in best_split:
-                new_specialization_tree_leaf_nodes.append(best_split_leaf)
-
-        else:
-            for node1, node2 in zip(specialization_leaf_nodes, new_specialization_tree_leaf_nodes):
-                if node1 == node2:
-                    continue
-                else:
-                    break
-            else:
-                return new_specialization_tree_leaf_nodes
-
-            return specialize(new_specialization_tree_leaf_nodes)
-
     specialization_tree_leaf_nodes = specialize(
-        [specialization_tree_root_node])
+        [specialization_tree_root_node], DGHs, k)
 
     for specialization_node in specialization_tree_leaf_nodes:
         for record_idx, record in specialization_node.anonymized_records:
