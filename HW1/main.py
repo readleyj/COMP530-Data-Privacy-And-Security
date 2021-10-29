@@ -236,7 +236,7 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     def calc_dist_between_records(record1, record2):
         raw_records = [record1, record2]
-        anonymized_records = [record1.copy(), record2.copy()]
+        anonymized_records = [dict(record1), dict(record2)]
 
         total_MD_cost = 0
 
@@ -357,7 +357,7 @@ elapsed_time = end_time - start_time
 cost_md = cost_MD(raw_file, anonymized_file, dgh_path)
 cost_lm = cost_LM(raw_file, anonymized_file, dgh_path)
 print(
-    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm:.2f}\n\tElapsed Time: {elapsed_time:.2f}s")
+    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm:.2f}\n\tElapsed Time: {elapsed_time:.2f}s\n")
 
 # Sample usage:
 # python3 main.py clustering DGHs/ adult-hw1.csv result.csv 300
