@@ -8,7 +8,6 @@ class SpecializationNode():
     def __init__(self, dgh_node_attribute_infos, parent=None):
         self.dgh_node_attribute_infos = dgh_node_attribute_infos
         self.parent = parent
-        self.children = []
         self.raw_records = None
         self.anonymized_records = None
 
