@@ -102,7 +102,7 @@ def specialize(specialization_leaf_nodes, DGHs, k):
                     new_dgh_node_attribute_infos[:], parent=specialization_node)
                 new_specialization_nodes.append(new_specialization_node)
 
-            if all([node.num_records >= k for node in new_specialization_nodes]):
+            if new_specialization_nodes and all([node.num_records >= k for node in new_specialization_nodes]):
                 valid_splits.append(new_specialization_nodes)
                 split_cost_diffs.append(
                     specialization_node.LM_cost - calculate_LM_cost_of_split(new_specialization_nodes))

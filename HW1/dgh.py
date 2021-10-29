@@ -86,5 +86,6 @@ class DGHInfo:
         self.value_to_node[value] = node
 
         for child in node.children:
-            child.ancestors = set.union(node.ancestors, set([value]))
+            child.ancestors = set.union(
+                node.ancestors, set([value, child.value]))
             self._traverse(child)
