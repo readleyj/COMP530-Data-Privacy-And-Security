@@ -171,7 +171,8 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
         for record in anonymized_dataset:
             attribute_val = record[attribute]
-            node_num_desc_leaf = dgh_info.value_to_desc_leaf_counts[attribute_val]
+            node_num_desc_leaf = dgh_info.get_desc_leaf_count_by_value(
+                attribute_val)
             lm_val = (node_num_desc_leaf - 1) / (dgh_total_leaves)
 
             record_lm_cost += attribute_weight * lm_val

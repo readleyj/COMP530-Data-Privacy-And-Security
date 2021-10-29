@@ -22,27 +22,30 @@ class DGHInfo:
         self.root_node = root_node
 
         self.value_to_level_map = {}
-        self.value_to_desc_leaf_counts = {}
-        self.value_to_node = {}
+        self.value_to_desc_leaf_counts_map = {}
+        self.value_to_node_map = {}
 
         self._calc_desc_leaf_counts(root_node)
         self._traverse(root_node)
 
     @property
     def total_num_leaves(self):
-        return self.value_to_desc_leaf_counts[self.root_node.value]
+        return self.value_to_desc_leaf_counts_map[self.root_node.value]
 
-    def level_dist_between_values(self, value1, value2):
-        return abs(self.value_to_level_map[value1] - self.value_to_level_map[value2])
-
-    def get_value_level(self, value):
+    def get_level_by_value(self, value):
         return self.value_to_level_map[value]
 
-    def get_value_desc_leaf_count(self, value):
-        return self.value_to_desc_leaf_counts[value]
+    def get_desc_leaf_count_by_value(self, value):
+        return self.value_to_desc_leaf_counts_map[value]
+
+    def get_node_by_value(self, value):
+        return self.value_to_node_map[value]
+
+    def level_dist_between_values(self, value1, value2):
+        return abs(self.get_level_by_value(value1) - self.get_level_by_value(value2))
 
     def lowest_common_ancestor(self, node_values):
-        nodes = [self.value_to_node[value] for value in node_values]
+        nodes = [self.get_node_by_value(value) for value in node_values]
         highest_level = min([node.level for node in nodes])
         new_nodes = []
 
@@ -64,8 +67,10 @@ class DGHInfo:
         return new_node_values[0]
 
     def has_ancestor_with_value(self, value_1, value_2):
-        # Check if a node with value_1 is an ancestor of node with value_2
-        dgh_node_2 = self.value_to_node[value_2]
+        """
+        Check if a node with value_1 is an ancestor of node with value_2
+        """
+        dgh_node_2 = self.get_node_by_value(value_2)
         return value_1 in dgh_node_2.ancestors
 
     def _calc_desc_leaf_counts(self, node):
@@ -82,8 +87,8 @@ class DGHInfo:
         value = node.value
 
         self.value_to_level_map[value] = node.level
-        self.value_to_desc_leaf_counts[value] = node.desc_leaf_count
-        self.value_to_node[value] = node
+        self.value_to_desc_leaf_counts_map[value] = node.desc_leaf_count
+        self.value_to_node_map[value] = node
 
         for child in node.children:
             child.ancestors = set.union(

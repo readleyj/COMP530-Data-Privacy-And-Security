@@ -39,11 +39,9 @@ class SpecializationNode():
             num_matches = 0
 
             for attribute_name, value in self.dgh_node_attribute_infos:
-                node_value_1, node_value_2 = value, record[attribute_name]
-
                 dgh_info = self.DGHs[attribute_name]
                 num_matches += int(dgh_info.has_ancestor_with_value(
-                    node_value_1, node_value_2))
+                    value, record[attribute_name]))
 
             if num_matches == len(self.dgh_node_attribute_infos):
                 new_record = dict(record)
@@ -69,7 +67,8 @@ class SpecializationNode():
 
             for _, record in self.anonymized_records:
                 attribute_val = record[attribute]
-                node_num_desc_leaf = dgh_info.value_to_desc_leaf_counts[attribute_val]
+                node_num_desc_leaf = dgh_info.get_desc_leaf_count_by_value(
+                    attribute_val)
                 lm_val = (node_num_desc_leaf - 1) / (dgh_total_leaves)
 
                 record_lm_cost += attribute_weight * lm_val
@@ -92,7 +91,7 @@ def specialize(specialization_leaf_nodes, DGHs, k):
                 :]
 
             dgh_info = DGHs[attribute_name]
-            dgh_node = dgh_info.value_to_node[value]
+            dgh_node = dgh_info.get_node_by_value(value)
             attribute_idx = specialization_node.attribute_name_to_idx_map[attribute_name]
 
             for child_dgh_node in dgh_node.children:
