@@ -103,12 +103,6 @@ def read_DGHs(DGH_folder: str) -> dict:
     return DGHs
 
 
-##############################################################################
-# Mandatory Functions                                                        #
-# You need to complete these functions without changing their parameters.    #
-##############################################################################
-
-
 def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             DGH_folder: str) -> float:
     """Calculate Distortion Metric (MD) cost between two datasets.
@@ -328,7 +322,6 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-# Command line argument handling and calling of respective anonymizer:
 if len(sys.argv) < 6:
     print(
         f"Usage: python3 {sys.argv[0]} algorithm DGH-folder raw-dataset.csv anonymized.csv k")
