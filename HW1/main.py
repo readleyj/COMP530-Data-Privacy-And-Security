@@ -7,7 +7,7 @@ import heapq
 import time
 
 from dgh import DGHNode, DGHInfo
-from util import calculate_equivalence_class
+from util import calculate_equivalence_class, calc_dist_between_records
 from specialization import SpecializationNode, specialize
 
 if sys.version_info[0] < 3 or sys.version_info[1] < 5:
@@ -228,23 +228,6 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     raw_dataset = read_dataset(raw_dataset_file)
     DGHs = read_DGHs(DGH_folder)
 
-    def calc_dist_between_records(record1, record2):
-        raw_records = [record1, record2]
-        anonymized_records = [dict(record1), dict(record2)]
-
-        total_MD_cost = 0
-
-        calculate_equivalence_class(DGHs, anonymized_records)
-
-        for attribute, dgh_info in DGHs.items():
-            for idx in range(len(raw_records)):
-                raw_record, anonymized_record = raw_records[idx], anonymized_records[idx]
-
-                total_MD_cost += dgh_info.level_dist_between_values(
-                    raw_record[attribute], anonymized_record[attribute])
-
-        return total_MD_cost
-
     anonymized_dataset = [None] * len(raw_dataset)
     clustering_heap = []
 
@@ -266,7 +249,7 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
             record = raw_dataset[record_idx]
 
             heapq.heappush(clustering_heap, [
-                calc_dist_between_records(rec, record), record_idx, record])
+                calc_dist_between_records(rec, record, DGHs), record_idx, record])
 
         closest_entries = heapq.nsmallest(cluster_size - 1, clustering_heap)
         entry_cluster = closest_entries + [[-1, first_unmarked_index, rec]]

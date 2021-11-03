@@ -24,6 +24,7 @@ class DGHInfo:
         self.value_to_level_map = {}
         self.value_to_desc_leaf_counts_map = {}
         self.value_to_node_map = {}
+        self.lca_cache = {}
 
         self._calc_desc_leaf_counts(root_node)
         self._traverse(root_node)
@@ -32,9 +33,6 @@ class DGHInfo:
     def total_num_leaves(self):
         return self.value_to_desc_leaf_counts_map[self.root_node.value]
 
-    def get_level_by_value(self, value):
-        return self.value_to_level_map[value]
-
     def get_desc_leaf_count_by_value(self, value):
         return self.value_to_desc_leaf_counts_map[value]
 
@@ -42,29 +40,32 @@ class DGHInfo:
         return self.value_to_node_map[value]
 
     def level_dist_between_values(self, value1, value2):
-        return abs(self.get_level_by_value(value1) - self.get_level_by_value(value2))
+        return abs(self.value_to_level_map[value1] - self.value_to_level_map[value2])
 
     def lowest_common_ancestor(self, node_values):
-        nodes = [self.get_node_by_value(value) for value in node_values]
-        highest_level = min([node.level for node in nodes])
-        new_nodes = []
+        if node_values not in self.lca_cache:
+            nodes = [self.get_node_by_value(value) for value in node_values]
+            highest_level = min([node.level for node in nodes])
+            new_nodes = []
 
-        for node in nodes:
-            cur_node = node
+            for node in nodes:
+                cur_node = node
 
-            while cur_node.level > highest_level:
-                cur_node = cur_node.parent
+                while cur_node.level > highest_level:
+                    cur_node = cur_node.parent
 
-            new_nodes.append(cur_node)
+                new_nodes.append(cur_node)
 
-        new_node_values = [node.value for node in new_nodes]
+            new_node_values = [node.value for node in new_nodes]
 
-        while len(new_node_values) != new_node_values.count(new_node_values[0]):
-            for idx, new_node in enumerate(new_nodes):
-                new_nodes[idx] = new_node.parent
-                new_node_values[idx] = new_nodes[idx].value
+            while len(new_node_values) != new_node_values.count(new_node_values[0]):
+                for idx, new_node in enumerate(new_nodes):
+                    new_nodes[idx] = new_node.parent
+                    new_node_values[idx] = new_nodes[idx].value
 
-        return new_node_values[0]
+            self.lca_cache[node_values] = new_node_values[0]
+
+        return self.lca_cache[node_values]
 
     def has_ancestor_with_value(self, value_1, value_2):
         """
