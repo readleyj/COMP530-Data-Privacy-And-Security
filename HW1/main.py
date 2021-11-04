@@ -228,13 +228,13 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     DGHs = read_DGHs(DGH_folder)
 
     anonymized_dataset = [None] * len(raw_dataset)
-    clustering_heap = []
 
     unmarked_record_indices = set(range(len(raw_dataset)))
     first_unmarked_index = 0
 
     while len(unmarked_record_indices) >= k:
         cluster_size = k
+        clustering_heap = []
 
         if len(unmarked_record_indices) // k == 1 and len(unmarked_record_indices) % k > 0:
             cluster_size = len(unmarked_record_indices)
@@ -264,8 +264,6 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
         if unmarked_record_indices:
             first_unmarked_index = min(unmarked_record_indices)
-
-        clustering_heap.clear()
 
     write_dataset(anonymized_dataset, output_file)
 
