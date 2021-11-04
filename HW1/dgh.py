@@ -33,18 +33,12 @@ class DGHInfo:
     def total_num_leaves(self):
         return self.value_to_desc_leaf_counts_map[self.root_node.value]
 
-    def get_desc_leaf_count_by_value(self, value):
-        return self.value_to_desc_leaf_counts_map[value]
-
-    def get_node_by_value(self, value):
-        return self.value_to_node_map[value]
-
     def level_dist_between_values(self, value1, value2):
         return abs(self.value_to_level_map[value1] - self.value_to_level_map[value2])
 
     def lowest_common_ancestor(self, node_values):
         if node_values not in self.lca_cache:
-            nodes = [self.get_node_by_value(value) for value in node_values]
+            nodes = [self.value_to_node_map[value] for value in node_values]
             highest_level = min([node.level for node in nodes])
             new_nodes = []
 
@@ -71,7 +65,7 @@ class DGHInfo:
         """
         Check if a node with value_1 is an ancestor of node with value_2
         """
-        dgh_node_2 = self.get_node_by_value(value_2)
+        dgh_node_2 = self.value_to_node_map[value_2]
         return value_1 in dgh_node_2.ancestors
 
     def _calc_desc_leaf_counts(self, node):

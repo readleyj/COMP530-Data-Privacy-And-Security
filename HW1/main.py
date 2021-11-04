@@ -163,8 +163,7 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
 
         for record in anonymized_dataset:
             attribute_val = record[attribute]
-            node_num_desc_leaf = dgh_info.get_desc_leaf_count_by_value(
-                attribute_val)
+            node_num_desc_leaf = dgh_info.value_to_desc_leaf_counts_map[attribute_val]
             lm_val = (node_num_desc_leaf - 1) / (dgh_total_leaves)
 
             record_lm_cost += attribute_weight * lm_val
@@ -293,7 +292,6 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
     specialization_tree_root_node = SpecializationNode(
         dgh_root_node_attributes_info)
-    specialization_tree_leaf_nodes = None
 
     specialization_tree_leaf_nodes = specialize(
         [specialization_tree_root_node], DGHs, k)
