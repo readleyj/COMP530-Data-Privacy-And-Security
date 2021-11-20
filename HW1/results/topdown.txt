@@ -1,0 +1,35 @@
+Results of 5-anonimity:
+	Cost_MD: 438934
+	Cost_LM: 10145.69
+	Elapsed Time: 50.99s
+
+Results of 10-anonimity:
+	Cost_MD: 470127
+	Cost_LM: 11685.73
+	Elapsed Time: 47.80s
+
+Results of 20-anonimity:
+	Cost_MD: 495724
+	Cost_LM: 12831.21
+	Elapsed Time: 44.47s
+
+Results of 40-anonimity:
+	Cost_MD: 542582
+	Cost_LM: 17424.46
+	Elapsed Time: 46.65s
+
+Results of 80-anonimity:
+	Cost_MD: 572887
+	Cost_LM: 18973.85
+	Elapsed Time: 47.85s
+
+Results of 160-anonimity:
+	Cost_MD: 607981
+	Cost_LM: 21126.39
+	Elapsed Time: 40.67s
+
+Results of 320-anonimity:
+	Cost_MD: 650511
+	Cost_LM: 23642.60
+	Elapsed Time: 35.57s
+
