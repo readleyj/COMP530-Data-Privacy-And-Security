@@ -1,10 +1,12 @@
-import math, random
+import math
+import random
 
 
 """ Globals """
-DOMAIN = list(range(25)) # [0, 1, ..., 24]
+DOMAIN = list(range(25))  # [0, 1, ..., 24]
 
 """ Helpers """
+
 
 def read_dataset(filename):
     """
@@ -26,9 +28,12 @@ def read_dataset(filename):
 
 ### HELPERS END ###
 
+
 """ Functions to implement """
 
 # TODO: Implement this function!
+
+
 def perturb_grr(val, epsilon):
     """
         Perturbs the given value using GRR protocol.
@@ -43,6 +48,8 @@ def perturb_grr(val, epsilon):
     pass
 
 # TODO: Implement this function!
+
+
 def estimate_grr(perturbed_values, epsilon):
     """
         Estimates the histogram given GRR perturbed values of the users.
@@ -57,6 +64,8 @@ def estimate_grr(perturbed_values, epsilon):
     pass
 
 # TODO: Implement this function!
+
+
 def grr_experiment(dataset, epsilon):
     """
         Conducts the data collection experiment for GRR.
@@ -70,6 +79,8 @@ def grr_experiment(dataset, epsilon):
     return 0.0
 
 # TODO: Implement this function!
+
+
 def encode_rappor(val):
     """
         Encodes the given value into a bit vector.
@@ -82,6 +93,8 @@ def encode_rappor(val):
     pass
 
 # TODO: Implement this function!
+
+
 def perturb_rappor(encoded_val, epsilon):
     """
         Perturbs the given bit vector using RAPPOR protocol.
@@ -95,6 +108,8 @@ def perturb_rappor(encoded_val, epsilon):
     pass
 
 # TODO: Implement this function!
+
+
 def estimate_rappor(perturbed_values, epsilon):
     """
         Estimates the histogram given RAPPOR perturbed values of the users.
@@ -107,8 +122,10 @@ def estimate_rappor(perturbed_values, epsilon):
             for each hour in the domain [0, 1, ..., 24] respectively.
     """
     pass
-    
+
 # TODO: Implement this function!
+
+
 def rappor_experiment(dataset, epsilon):
     """
         Conducts the data collection experiment for RAPPOR.
@@ -121,12 +138,13 @@ def rappor_experiment(dataset, epsilon):
     """
     return 0.0
 
+
 def main():
     dataset = read_dataset("daily_time.txt")
-    
+
     print("GRR EXPERIMENT")
-    #for epsilon in [20.0]: 
-    for epsilon in [0.1, 0.5, 1.0, 2.0, 4.0, 6.0]: 
+    # for epsilon in [20.0]:
+    for epsilon in [0.1, 0.5, 1.0, 2.0, 4.0, 6.0]:
         error = grr_experiment(dataset, epsilon)
         print("e={}, Error: {:.2f}".format(epsilon, error))
 
@@ -135,7 +153,7 @@ def main():
     for epsilon in [0.1, 0.5, 1.0, 2.0, 4.0, 6.0]:
         error = rappor_experiment(dataset, epsilon)
         print("e={}, Error: {:.2f}".format(epsilon, error))
-    
+
 
 if __name__ == "__main__":
     main()

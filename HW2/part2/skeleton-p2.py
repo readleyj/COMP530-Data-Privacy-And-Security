@@ -4,13 +4,16 @@ import math
 import random
 
 ''' Globals '''
-LABELS = ["", "frontpage", "news", "tech", "local", "opinion", "on-air", "misc", "weather", "msn-news", "health", "living", "business", "msn-sports", "sports", "summary", "bbs", "travel"]
+LABELS = ["", "frontpage", "news", "tech", "local", "opinion", "on-air", "misc", "weather",
+          "msn-news", "health", "living", "business", "msn-sports", "sports", "summary", "bbs", "travel"]
 
 
 """ 
     Helper functions
     (You can define your helper functions here.)
 """
+
+
 def read_dataset(filename):
     """
         Reads the dataset with given filename.
@@ -37,6 +40,8 @@ def read_dataset(filename):
 ''' Functions to implement '''
 
 # TODO: Implement this function!
+
+
 def get_histogram(dataset: list):
     """
         Creates a histogram of given counts for each category and saves it to a file.
@@ -169,34 +174,34 @@ def main():
     dataset_filename = "msnbc.dat"
     dataset = read_dataset(dataset_filename)
 
-    #non_private_histogram = get_histogram(dataset)
-    #print("Non private histogram:", non_private_histogram)
-    
+    # non_private_histogram = get_histogram(dataset)
+    # print("Non private histogram:", non_private_histogram)
+
     #print("**** N EXPERIMENT RESULTS (f of Part 2) ****")
     #eps = 0.01
     #n_values = []
-    #for i in range(1, 106, 5):
+    # for i in range(1, 106, 5):
     #    n_values.append(i)
     #errors = n_experiment(dataset, n_values, eps)
-    #for i in range(len(n_values)):
-    #    print("n = ", n_values[i], " error = ", errors[i])   
-    
+    # for i in range(len(n_values)):
+    #    print("n = ", n_values[i], " error = ", errors[i])
+
     print("*" * 50)
 
-    #print("**** EPSILON EXPERIMENT RESULTS (g of Part 2) ****")    
+    #print("**** EPSILON EXPERIMENT RESULTS (g of Part 2) ****")
     #n = 50
     #eps_values = [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 1.0]
     #errors = epsilon_experiment(dataset, n, eps_values)
-    #for i in range(len(eps_values)):
+    # for i in range(len(eps_values)):
     #    print("eps = ", eps_values[i], " error = ", errors[i])
-    
+
     print("*" * 50)
 
     #print ("**** EXPONENTIAL EXPERIMENT RESULTS ****")
     #eps_values = [0.001, 0.005, 0.01, 0.03, 0.05, 0.1]
     #exponential_experiment_result = exponential_experiment(dataset, eps_values)
-    #for i in range(len(eps_values)):
-    #    print("eps = ", eps_values[i], " accuracy = ", exponential_experiment_result[i])    
+    # for i in range(len(eps_values)):
+    #    print("eps = ", eps_values[i], " accuracy = ", exponential_experiment_result[i])
 
 
 if __name__ == "__main__":
