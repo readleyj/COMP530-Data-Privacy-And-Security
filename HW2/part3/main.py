@@ -163,8 +163,6 @@ def estimate_rappor(perturbed_values, epsilon):
 
     return denoised_hist
 
-# TODO: Implement this function!
-
 
 def rappor_experiment(dataset, epsilon):
     """
