@@ -43,7 +43,7 @@ def draw_histogram(counts):
 
     ax.set_xlabel('# of visits in each category')
     ax.xaxis.set_label_position('top')
-    ax.set_ylabel('Counts')
+    ax.set_ylabel('Number of visits')
 
     return fig
 
