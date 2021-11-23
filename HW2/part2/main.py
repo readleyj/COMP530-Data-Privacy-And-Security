@@ -34,7 +34,18 @@ def get_counts(dataset):
 
 
 def draw_histogram(counts):
-    pass
+    fig, ax = plt.subplots()
+    category_indices = list(range(1, len(LABELS)))
+
+    plt.hist(category_indices, weights=counts, bins=np.arange(
+        min(category_indices), max(category_indices) + 2), align='left', edgecolor='black')
+    plt.xticks(range(1, max(category_indices) + 1), LABELS[1:], rotation=90)
+
+    ax.set_xlabel('# of visits in each category')
+    ax.xaxis.set_label_position('top')
+    ax.set_ylabel('Counts')
+
+    return fig
 
 
 def get_histogram(dataset: list):
@@ -51,7 +62,8 @@ def get_histogram(dataset: list):
 
     counts = get_counts(dataset)
 
-    draw_histogram(counts)
+    histogram = draw_histogram(counts)
+    histogram.savefig('np-histogram.png', dvi=1000, bbox_inches='tight')
 
     return counts
 
