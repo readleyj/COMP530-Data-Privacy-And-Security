@@ -63,7 +63,7 @@ def get_histogram(dataset: list):
     counts = get_counts(dataset)
 
     histogram = draw_histogram(counts)
-    histogram.savefig('np-histogram.png', dvi=1000, bbox_inches='tight')
+    histogram.savefig('np-histogram.png', bbox_inches='tight')
 
     return counts
 
