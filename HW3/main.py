@@ -54,6 +54,7 @@ def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
 
 
 def backdoor_attack(X_train, y_train, model_type, num_samples):
+
     # TODO: You need to implement this function!
     # You may want to use copy.deepcopy() if you will modify data
     return -999
@@ -65,13 +66,20 @@ def backdoor_attack(X_train, y_train, model_type, num_samples):
 
 
 def evade_model(trained_model, actual_example):
-    # TODO: You need to implement this function!
     actual_class = trained_model.predict([actual_example])[0]
     modified_example = copy.deepcopy(actual_example)
-    # while pred_class == actual_class:
-    # do something to modify the instance
-    #    print("do something")
-    modified_example[0] = -2.0
+    pred_class = actual_class
+
+    num_features = len(actual_example)
+
+    while pred_class == actual_class:
+        rand_idx = np.random.choice(range(num_features))
+        modified_example[rand_idx] += np.random.normal(0, 1.0)
+
+        # print(modified_example)
+
+        pred_class = trained_model.predict([modified_example])[0]
+
     return modified_example
 
 
@@ -151,26 +159,26 @@ def main():
     print("Accuracy of SVC: " + str(accuracy_score(y_test, SVC_predict)))
 
     # Label flipping attack executions:
-    model_types = ["DT", "LR", "SVC"]
-    n_vals = [0.05, 0.10, 0.20, 0.40]
-    for model_type in model_types:
-        for n in n_vals:
-            acc = attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n)
-            print("Accuracy of poisoned", model_type, str(n), ":", acc)
+    # model_types = ["DT", "LR", "SVC"]
+    # n_vals = [0.05, 0.10, 0.20, 0.40]
+    # for model_type in model_types:
+    #     for n in n_vals:
+    #         acc = attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n)
+    #         print("Accuracy of poisoned", model_type, str(n), ":", acc)
 
-    # Backdoor attack executions:
-    counts = [0, 1, 3, 5, 10]
-    for model_type in model_types:
-        for num_samples in counts:
-            success_rate = backdoor_attack(X_train, y_train, model_type, num_samples)
-            print(
-                "Success rate of backdoor:",
-                success_rate,
-                "model_type:",
-                model_type,
-                "num_samples:",
-                num_samples,
-            )
+    # # Backdoor attack executions:
+    # counts = [0, 1, 3, 5, 10]
+    # for model_type in model_types:
+    #     for num_samples in counts:
+    #         success_rate = backdoor_attack(X_train, y_train, model_type, num_samples)
+    #         print(
+    #             "Success rate of backdoor:",
+    #             success_rate,
+    #             "model_type:",
+    #             model_type,
+    #             "num_samples:",
+    #             num_samples,
+    #         )
 
     # Evasion attack executions:
     trained_models = [myDEC, myLR, mySVC]
@@ -196,20 +204,20 @@ def main():
         myDEC, myLR, mySVC, X_test[num_examples : num_examples * 2]
     )
 
-    # Model stealing:
-    budgets = [5, 10, 20, 30, 50, 100, 200]
-    for n in budgets:
-        print("******************************")
-        print("Number of queries used in model stealing attack:", n)
-        stolen_DT = steal_model(myDEC, "DT", X_test[0:n])
-        stolen_predict = stolen_DT.predict(X_test)
-        print("Accuracy of stolen DT: " + str(accuracy_score(y_test, stolen_predict)))
-        stolen_LR = steal_model(myLR, "LR", X_test[0:n])
-        stolen_predict = stolen_LR.predict(X_test)
-        print("Accuracy of stolen LR: " + str(accuracy_score(y_test, stolen_predict)))
-        stolen_SVC = steal_model(mySVC, "SVC", X_test[0:n])
-        stolen_predict = stolen_SVC.predict(X_test)
-        print("Accuracy of stolen SVC: " + str(accuracy_score(y_test, stolen_predict)))
+    # # Model stealing:
+    # budgets = [5, 10, 20, 30, 50, 100, 200]
+    # for n in budgets:
+    #     print("******************************")
+    #     print("Number of queries used in model stealing attack:", n)
+    #     stolen_DT = steal_model(myDEC, "DT", X_test[0:n])
+    #     stolen_predict = stolen_DT.predict(X_test)
+    #     print("Accuracy of stolen DT: " + str(accuracy_score(y_test, stolen_predict)))
+    #     stolen_LR = steal_model(myLR, "LR", X_test[0:n])
+    #     stolen_predict = stolen_LR.predict(X_test)
+    #     print("Accuracy of stolen LR: " + str(accuracy_score(y_test, stolen_predict)))
+    #     stolen_SVC = steal_model(mySVC, "SVC", X_test[0:n])
+    #     stolen_predict = stolen_SVC.predict(X_test)
+    #     print("Accuracy of stolen SVC: " + str(accuracy_score(y_test, stolen_predict)))
 
 
 if __name__ == "__main__":
