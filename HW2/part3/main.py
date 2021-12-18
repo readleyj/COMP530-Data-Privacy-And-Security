@@ -7,12 +7,12 @@ DOMAIN = list(range(25))
 
 def read_dataset(filename):
     """
-        Reads the dataset with given filename.
+    Reads the dataset with given filename.
 
-        Args:
-            filename (str): Path to the dataset file
-        Returns:
-            Dataset rows as a list.
+    Args:
+        filename (str): Path to the dataset file
+    Returns:
+        Dataset rows as a list.
     """
 
     result = []
@@ -30,8 +30,15 @@ def get_counts(dataset):
 def calculate_average_error(actual_hist, noisy_hist):
     num_bins = len(actual_hist)
 
-    return sum([abs(actual_val - noise_val)
-                for actual_val, noise_val in zip(actual_hist, noisy_hist)]) / num_bins
+    return (
+        sum(
+            [
+                abs(actual_val - noise_val)
+                for actual_val, noise_val in zip(actual_hist, noisy_hist)
+            ]
+        )
+        / num_bins
+    )
 
 
 def apply_estimator(hist, val, n, p, q):
@@ -40,13 +47,13 @@ def apply_estimator(hist, val, n, p, q):
 
 def perturb_grr(val, epsilon):
     """
-        Perturbs the given value using GRR protocol.
+    Perturbs the given value using GRR protocol.
 
-        Args:
-            val (int): User's true value
-            epsilon (float): Privacy parameter
-        Returns:
-            Perturbed value that the user reports to the server
+    Args:
+        val (int): User's true value
+        epsilon (float): Privacy parameter
+    Returns:
+        Perturbed value that the user reports to the server
     """
     d = len(DOMAIN)
 
@@ -61,14 +68,14 @@ def perturb_grr(val, epsilon):
 
 def estimate_grr(perturbed_values, epsilon):
     """
-        Estimates the histogram given GRR perturbed values of the users.
+    Estimates the histogram given GRR perturbed values of the users.
 
-        Args:
-            perturbed_values (list): Perturbed values of all users
-            epsilon (float): Privacy parameter
-        Returns:
-            Estimated histogram as a list: [1.5, 6.7, ..., 1061.0] 
-            for each hour in the domain [0, 1, ..., 24] respectively.
+    Args:
+        perturbed_values (list): Perturbed values of all users
+        epsilon (float): Privacy parameter
+    Returns:
+        Estimated histogram as a list: [1.5, 6.7, ..., 1061.0]
+        for each hour in the domain [0, 1, ..., 24] respectively.
     """
     d = len(DOMAIN)
 
@@ -78,21 +85,20 @@ def estimate_grr(perturbed_values, epsilon):
     n = len(perturbed_values)
     noisy_hist = get_counts(perturbed_values)
 
-    denoised_hist = [apply_estimator(
-        noisy_hist, val, n, p, q) for val in DOMAIN]
+    denoised_hist = [apply_estimator(noisy_hist, val, n, p, q) for val in DOMAIN]
 
     return denoised_hist
 
 
 def grr_experiment(dataset, epsilon):
     """
-        Conducts the data collection experiment for GRR.
+    Conducts the data collection experiment for GRR.
 
-        Args:
-            dataset (list): The daily_time dataset
-            epsilon (float): Privacy parameter
-        Returns:
-            Error of the estimated histogram (float) -> Ex: 330.78
+    Args:
+        dataset (list): The daily_time dataset
+        epsilon (float): Privacy parameter
+    Returns:
+        Error of the estimated histogram (float) -> Ex: 330.78
     """
 
     actual_hist = get_counts(dataset)
@@ -107,25 +113,25 @@ def grr_experiment(dataset, epsilon):
 
 def encode_rappor(val):
     """
-        Encodes the given value into a bit vector.
+    Encodes the given value into a bit vector.
 
-        Args:
-            val (int): The user's true value.
-        Returns:
-            The encoded bit vector as a list: [0, 1, ..., 0]
+    Args:
+        val (int): The user's true value.
+    Returns:
+        The encoded bit vector as a list: [0, 1, ..., 0]
     """
     return [int(val == elem) for elem in DOMAIN]
 
 
 def perturb_rappor(encoded_val, epsilon):
     """
-        Perturbs the given bit vector using RAPPOR protocol.
+    Perturbs the given bit vector using RAPPOR protocol.
 
-        Args:
-            encoded_val (list) : User's encoded value
-            epsilon (float): Privacy parameter
-        Returns:
-            Perturbed bit vector that the user reports to the server as a list: [1, 1, ..., 0]
+    Args:
+        encoded_val (list) : User's encoded value
+        epsilon (float): Privacy parameter
+    Returns:
+        Perturbed bit vector that the user reports to the server as a list: [1, 1, ..., 0]
     """
 
     p = (np.exp(epsilon / 2)) / (np.exp(epsilon / 2) + 1)
@@ -142,14 +148,14 @@ def perturb_rappor(encoded_val, epsilon):
 
 def estimate_rappor(perturbed_values, epsilon):
     """
-        Estimates the histogram given RAPPOR perturbed values of the users.
+    Estimates the histogram given RAPPOR perturbed values of the users.
 
-        Args:
-            perturbed_values (list of lists): Perturbed bit vectors of all users
-            epsilon (float): Privacy parameter
-        Returns:
-            Estimated histogram as a list: [1.5, 6.7, ..., 1061.0] 
-            for each hour in the domain [0, 1, ..., 24] respectively.
+    Args:
+        perturbed_values (list of lists): Perturbed bit vectors of all users
+        epsilon (float): Privacy parameter
+    Returns:
+        Estimated histogram as a list: [1.5, 6.7, ..., 1061.0]
+        for each hour in the domain [0, 1, ..., 24] respectively.
     """
 
     p = (np.exp(epsilon / 2)) / (np.exp(epsilon / 2) + 1)
@@ -158,21 +164,20 @@ def estimate_rappor(perturbed_values, epsilon):
     n = len(perturbed_values)
     noisy_hist = [sum(index_vals) for index_vals in zip(*perturbed_values)]
 
-    denoised_hist = [apply_estimator(
-        noisy_hist, val, n, p, q) for val in DOMAIN]
+    denoised_hist = [apply_estimator(noisy_hist, val, n, p, q) for val in DOMAIN]
 
     return denoised_hist
 
 
 def rappor_experiment(dataset, epsilon):
     """
-        Conducts the data collection experiment for RAPPOR.
+    Conducts the data collection experiment for RAPPOR.
 
-        Args:
-            dataset (list): The daily_time dataset
-            epsilon (float): Privacy parameter
-        Returns:
-            Error of the estimated histogram (float) -> Ex: 330.78
+    Args:
+        dataset (list): The daily_time dataset
+        epsilon (float): Privacy parameter
+    Returns:
+        Error of the estimated histogram (float) -> Ex: 330.78
     """
     actual_hist = get_counts(dataset)
 

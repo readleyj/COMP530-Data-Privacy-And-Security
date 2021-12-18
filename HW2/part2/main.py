@@ -3,18 +3,36 @@ from collections import Counter
 import matplotlib.pyplot as plt
 import numpy as np
 
-LABELS = ["", "frontpage", "news", "tech", "local", "opinion", "on-air", "misc", "weather",
-          "msn-news", "health", "living", "business", "msn-sports", "sports", "summary", "bbs", "travel"]
+LABELS = [
+    "",
+    "frontpage",
+    "news",
+    "tech",
+    "local",
+    "opinion",
+    "on-air",
+    "misc",
+    "weather",
+    "msn-news",
+    "health",
+    "living",
+    "business",
+    "msn-sports",
+    "sports",
+    "summary",
+    "bbs",
+    "travel",
+]
 
 
 def read_dataset(filename):
     """
-        Reads the dataset with given filename.
+    Reads the dataset with given filename.
 
-        Args:
-            filename (str): Path to the dataset file
-        Returns:
-            Dataset rows as a list of lists.
+    Args:
+        filename (str): Path to the dataset file
+    Returns:
+        Dataset rows as a list of lists.
     """
 
     result = []
@@ -28,8 +46,7 @@ def read_dataset(filename):
 
 
 def get_counts(dataset):
-    counts = Counter(
-        category_idx for row in dataset for category_idx in row)
+    counts = Counter(category_idx for row in dataset for category_idx in row)
     return [counts[category_idx] for category_idx in range(1, len(LABELS))]
 
 
@@ -37,48 +54,53 @@ def draw_histogram(counts):
     fig, ax = plt.subplots()
     category_indices = list(range(1, len(LABELS)))
 
-    plt.hist(category_indices, weights=counts, bins=np.arange(
-        min(category_indices), max(category_indices) + 2), align='left', edgecolor='black')
+    plt.hist(
+        category_indices,
+        weights=counts,
+        bins=np.arange(min(category_indices), max(category_indices) + 2),
+        align="left",
+        edgecolor="black",
+    )
     plt.xticks(range(1, max(category_indices) + 1), LABELS[1:], rotation=90)
 
-    ax.set_xlabel('# of visits in each category')
-    ax.xaxis.set_label_position('top')
-    ax.set_ylabel('Number of visits')
+    ax.set_xlabel("# of visits in each category")
+    ax.xaxis.set_label_position("top")
+    ax.set_ylabel("Number of visits")
 
     return fig
 
 
 def get_histogram(dataset: list):
     """
-        Creates a histogram of given counts for each category and saves it to a file.
+    Creates a histogram of given counts for each category and saves it to a file.
 
-        Args:
-            dataset (list of lists): The MSNBC dataset
+    Args:
+        dataset (list of lists): The MSNBC dataset
 
-        Returns:
-            Ordered list of counts for each page category (frontpage, news, tech, ..., travel)
-            Ex: [123, 383, 541, ..., 915]
+    Returns:
+        Ordered list of counts for each page category (frontpage, news, tech, ..., travel)
+        Ex: [123, 383, 541, ..., 915]
     """
 
     counts = get_counts(dataset)
 
     histogram = draw_histogram(counts)
-    histogram.savefig('np-histogram.png', bbox_inches='tight')
+    histogram.savefig("np-histogram.png", bbox_inches="tight")
 
     return counts
 
 
 def add_laplace_noise(real_answer: list, sensitivity: float, epsilon: float):
     """
-        Adds laplace noise to query's real answers.
+    Adds laplace noise to query's real answers.
 
-        Args:
-            real_answer (list): Real answers of a query -> Ex: [92.85, 57.63, 12, ..., 15.40]
-            sensitivity (float): Sensitivity
-            epsilon (float): Privacy parameter
-        Returns:
-            Noisy answers as a list.
-            Ex: [103.6, 61.8, 17.0, ..., 19.62]
+    Args:
+        real_answer (list): Real answers of a query -> Ex: [92.85, 57.63, 12, ..., 15.40]
+        sensitivity (float): Sensitivity
+        epsilon (float): Privacy parameter
+    Returns:
+        Noisy answers as a list.
+        Ex: [103.6, 61.8, 17.0, ..., 19.62]
     """
 
     return [num + np.random.laplace(0, sensitivity / epsilon) for num in real_answer]
@@ -86,27 +108,27 @@ def add_laplace_noise(real_answer: list, sensitivity: float, epsilon: float):
 
 def truncate(dataset: list, n: int):
     """
-        Truncates dataset according to truncation parameter n.
+    Truncates dataset according to truncation parameter n.
 
-        Args:
-            dataset: original dataset
-            n (int): truncation parameter
-        Returns:
-            truncated_dataset: truncated version of original dataset
+    Args:
+        dataset: original dataset
+        n (int): truncation parameter
+    Returns:
+        truncated_dataset: truncated version of original dataset
     """
     return [row[:n] for row in dataset]
 
 
 def get_dp_histogram(dataset: list, n: int, epsilon: float):
     """
-        Truncates dataset with parameter n and calculates differentially private histogram.
+    Truncates dataset with parameter n and calculates differentially private histogram.
 
-        Args:
-            dataset (list of lists): The MSNBC dataset
-            n (int): Truncation parameter
-            epsilon (float): Privacy parameter
-        Returns:
-            Differentially private histogram as a list
+    Args:
+        dataset (list of lists): The MSNBC dataset
+        n (int): Truncation parameter
+        epsilon (float): Privacy parameter
+    Returns:
+        Differentially private histogram as a list
     """
 
     sensitivity = n
@@ -118,24 +140,31 @@ def get_dp_histogram(dataset: list, n: int, epsilon: float):
 
 def calculate_average_error(actual_hist, noisy_hist):
     """
-        Calculates error according to the equation stated in part (e).
+    Calculates error according to the equation stated in part (e).
 
-        Args: Actual histogram (list), Noisy histogram (list)
-        Returns: Error (Err) in the noisy histogram (float)
+    Args: Actual histogram (list), Noisy histogram (list)
+    Returns: Error (Err) in the noisy histogram (float)
     """
 
     num_bins = len(actual_hist)
 
-    return sum([abs(actual_val - noise_val)
-                for actual_val, noise_val in zip(actual_hist, noisy_hist)]) / num_bins
+    return (
+        sum(
+            [
+                abs(actual_val - noise_val)
+                for actual_val, noise_val in zip(actual_hist, noisy_hist)
+            ]
+        )
+        / num_bins
+    )
 
 
 def n_experiment(dataset, n_values: list, epsilon: float):
     """
-        Function for the experiment explained in part (f).
-        n_values is a list, such as: [1, 6, 11, 16 ...]
-        Returns the errors as a list: [1256.6, 1653.5, ...] such that 1256.5 is the error when n=1,
-        1653.5 is the error when n = 6, and so forth.
+    Function for the experiment explained in part (f).
+    n_values is a list, such as: [1, 6, 11, 16 ...]
+    Returns the errors as a list: [1256.6, 1653.5, ...] such that 1256.5 is the error when n=1,
+    1653.5 is the error when n = 6, and so forth.
     """
     errors = []
     actual_hist = get_counts(dataset)
@@ -156,10 +185,10 @@ def n_experiment(dataset, n_values: list, epsilon: float):
 
 def epsilon_experiment(dataset, n: int, eps_values: list):
     """
-        Function for the experiment explained in part (g).
-        eps_values is a list, such as: [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 1.0]
-        Returns the errors as a list: [9786.5, 1234.5, ...] such that 9786.5 is the error when eps = 0.0001,
-        1234.5 is the error when eps = 0.001, and so forth.
+    Function for the experiment explained in part (g).
+    eps_values is a list, such as: [0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 1.0]
+    Returns the errors as a list: [9786.5, 1234.5, ...] such that 9786.5 is the error when eps = 0.0001,
+    1234.5 is the error when eps = 0.001, and so forth.
     """
     errors = []
     actual_hist = get_counts(dataset)
@@ -180,23 +209,22 @@ def epsilon_experiment(dataset, n: int, eps_values: list):
 
 def extract(dataset):
     """
-        Extracts the first 1000 sequences and truncates them to n=1
+    Extracts the first 1000 sequences and truncates them to n=1
     """
     return truncate(dataset[:1000], 1)
 
 
 def most_visited_exponential(smaller_dataset, epsilon):
     """
-        Using the Exponential mechanism, calculates private response for query:
-        "Which category (1-17) received the highest number of page visits?"
+    Using the Exponential mechanism, calculates private response for query:
+    "Which category (1-17) received the highest number of page visits?"
 
-        Returns 1 for frontpage, 2 for news, 3 for tech, etc.
+    Returns 1 for frontpage, 2 for news, 3 for tech, etc.
     """
     SENSITIVITY = 1
 
     scores = get_counts(smaller_dataset)
-    probabilities = [np.exp(epsilon * score / (2 * SENSITIVITY))
-                     for score in scores]
+    probabilities = [np.exp(epsilon * score / (2 * SENSITIVITY)) for score in scores]
     probabilities = probabilities / np.linalg.norm(probabilities, ord=1)
 
     return np.random.choice(range(1, len(scores) + 1), 1, p=probabilities)[0]
@@ -204,10 +232,10 @@ def most_visited_exponential(smaller_dataset, epsilon):
 
 def exponential_experiment(dataset, eps_values: list):
     """
-        Function for the experiment explained in part (i).
-        eps_values is a list such as: [0.001, 0.005, 0.01, 0.03, ..]
-        Returns the list of accuracy results [0.51, 0.78, ...] where 0.51 is the accuracy when eps = 0.001,
-        0.78 is the accuracy when eps = 0.005, and so forth.
+    Function for the experiment explained in part (i).
+    eps_values is a list such as: [0.001, 0.005, 0.01, 0.03, ..]
+    Returns the list of accuracy results [0.51, 0.78, ...] where 0.51 is the accuracy when eps = 0.001,
+    0.78 is the accuracy when eps = 0.005, and so forth.
     """
     accuracies = []
 
@@ -220,8 +248,9 @@ def exponential_experiment(dataset, eps_values: list):
         num_correct = 0
 
         for _ in range(1000):
-            num_correct += (most_visited_exponential(extracted_dataset,
-                            epsilon) == correct_answer)
+            num_correct += (
+                most_visited_exponential(extracted_dataset, epsilon) == correct_answer
+            )
 
         accuracies.append((num_correct / 1000) * 100)
 
@@ -266,8 +295,7 @@ def main():
     exponential_experiment_result = exponential_experiment(dataset, eps_values)
 
     for i in range(len(eps_values)):
-        print("eps = ", eps_values[i], " accuracy = ",
-              exponential_experiment_result[i])
+        print("eps = ", eps_values[i], " accuracy = ", exponential_experiment_result[i])
 
 
 if __name__ == "__main__":

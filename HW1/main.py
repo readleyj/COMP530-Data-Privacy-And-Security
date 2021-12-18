@@ -16,7 +16,7 @@ if sys.version_info[0] < 3 or sys.version_info[1] < 5:
 
 
 def read_dataset(dataset_file: str):
-    """ Read a dataset into a list and return.
+    """Read a dataset into a list and return.
 
     Args:
         dataset_file (str): path to the dataset file.
@@ -33,7 +33,7 @@ def read_dataset(dataset_file: str):
 
 
 def write_dataset(dataset, dataset_file: str) -> bool:
-    """ Writes a dataset to a csv file.
+    """Writes a dataset to a csv file.
 
     Args:
         dataset: the data in list[dict] format
@@ -44,7 +44,7 @@ def write_dataset(dataset, dataset_file: str) -> bool:
     """
     assert len(dataset) > 0, "The anonymized dataset is empty."
     keys = dataset[0].keys()
-    with open(dataset_file, 'w', newline='') as output_file:
+    with open(dataset_file, "w", newline="") as output_file:
         dict_writer = csv.DictWriter(output_file, keys)
         dict_writer.writeheader()
         dict_writer.writerows(dataset)
@@ -52,7 +52,7 @@ def write_dataset(dataset, dataset_file: str) -> bool:
 
 
 def read_DGH(DGH_file: str, attribute_name):
-    """ Reads one DGH file and returns in desired format.
+    """Reads one DGH file and returns in desired format.
 
     Args:
         DGH_file (str): the path to DGH file.
@@ -62,16 +62,24 @@ def read_DGH(DGH_file: str, attribute_name):
 
     with open(DGH_file) as file:
         for line in file:
-            level = line.rstrip().count('\t')
+            level = line.rstrip().count("\t")
             attribute = line.strip()
 
             if level == 0:
-                cur_node = DGHNode(attribute_name=attribute_name, value=attribute,
-                                   parent=None, level=level)
+                cur_node = DGHNode(
+                    attribute_name=attribute_name,
+                    value=attribute,
+                    parent=None,
+                    level=level,
+                )
             else:
                 parent_node = last_node_by_level[level - 1]
-                cur_node = DGHNode(attribute_name=attribute_name,
-                                   value=attribute, parent=parent_node, level=level)
+                cur_node = DGHNode(
+                    attribute_name=attribute_name,
+                    value=attribute,
+                    parent=parent_node,
+                    level=level,
+                )
                 parent_node.children.append(cur_node)
 
             if level >= len(last_node_by_level):
@@ -85,7 +93,7 @@ def read_DGH(DGH_file: str, attribute_name):
 
 
 def read_DGHs(DGH_folder: str) -> dict:
-    """ Read all DGH files from a directory and put them into a dictionary.
+    """Read all DGH files from a directory and put them into a dictionary.
 
     Args:
         DGH_folder (str): the path to the directory containing DGH files.
@@ -103,8 +111,9 @@ def read_DGHs(DGH_folder: str) -> dict:
     return DGHs
 
 
-def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
-            DGH_folder: str) -> float:
+def cost_MD(
+    raw_dataset_file: str, anonymized_dataset_file: str, DGH_folder: str
+) -> float:
     """Calculate Distortion Metric (MD) cost between two datasets.
 
     Args:
@@ -117,8 +126,11 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
     """
     raw_dataset = read_dataset(raw_dataset_file)
     anonymized_dataset = read_dataset(anonymized_dataset_file)
-    assert(len(raw_dataset) > 0 and len(raw_dataset) == len(anonymized_dataset)
-           and len(raw_dataset[0]) == len(anonymized_dataset[0]))
+    assert (
+        len(raw_dataset) > 0
+        and len(raw_dataset) == len(anonymized_dataset)
+        and len(raw_dataset[0]) == len(anonymized_dataset[0])
+    )
     DGHs = read_DGHs(DGH_folder)
 
     total_MD_cost = 0
@@ -128,13 +140,15 @@ def cost_MD(raw_dataset_file: str, anonymized_dataset_file: str,
             raw_record, anonymized_record = raw_dataset[idx], anonymized_dataset[idx]
 
             total_MD_cost += dgh_info.level_dist_between_values(
-                raw_record[attribute], anonymized_record[attribute])
+                raw_record[attribute], anonymized_record[attribute]
+            )
 
     return total_MD_cost
 
 
-def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
-            DGH_folder: str) -> float:
+def cost_LM(
+    raw_dataset_file: str, anonymized_dataset_file: str, DGH_folder: str
+) -> float:
     """Calculate Loss Metric (LM) cost between two datasets.
 
     Args:
@@ -147,8 +161,11 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     """
     raw_dataset = read_dataset(raw_dataset_file)
     anonymized_dataset = read_dataset(anonymized_dataset_file)
-    assert(len(raw_dataset) > 0 and len(raw_dataset) == len(anonymized_dataset)
-           and len(raw_dataset[0]) == len(anonymized_dataset[0]))
+    assert (
+        len(raw_dataset) > 0
+        and len(raw_dataset) == len(anonymized_dataset)
+        and len(raw_dataset[0]) == len(anonymized_dataset[0])
+    )
     DGHs = read_DGHs(DGH_folder)
 
     num_attrubutes = len(DGHs)
@@ -173,9 +190,8 @@ def cost_LM(raw_dataset_file: str, anonymized_dataset_file: str,
     return total_LM_cost
 
 
-def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
-                      output_file: str):
-    """ K-anonymization a dataset, given a set of DGHs and a k-anonymity param.
+def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int, output_file: str):
+    """K-anonymization a dataset, given a set of DGHs and a k-anonymity param.
 
     Args:
         raw_dataset_file (str): the path to the raw dataset file.
@@ -192,12 +208,17 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     random.shuffle(dataset_indices)
 
     num_pure_clusters = (len(dataset_indices) // k) - 1
-    cluster_ranges = [[cluster_num * k, (cluster_num + 1) * k - 1]
-                      for cluster_num in range(num_pure_clusters)] + [[num_pure_clusters * k, len(dataset_indices) - 1]]
-    index_ranges = [[dataset_indices[idx] for idx in
-                     range(cluster_range[0], cluster_range[1] + 1)] for cluster_range in cluster_ranges]
-    clusters = [[raw_dataset[idx] for idx in index_range]
-                for index_range in index_ranges]
+    cluster_ranges = [
+        [cluster_num * k, (cluster_num + 1) * k - 1]
+        for cluster_num in range(num_pure_clusters)
+    ] + [[num_pure_clusters * k, len(dataset_indices) - 1]]
+    index_ranges = [
+        [dataset_indices[idx] for idx in range(cluster_range[0], cluster_range[1] + 1)]
+        for cluster_range in cluster_ranges
+    ]
+    clusters = [
+        [raw_dataset[idx] for idx in index_range] for index_range in index_ranges
+    ]
 
     for cluster_idx in range(len(clusters)):
         cluster = clusters[cluster_idx]
@@ -214,9 +235,10 @@ def random_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
-                          output_file: str):
-    """ Clustering-based anonymization a dataset, given a set of DGHs.
+def clustering_anonymizer(
+    raw_dataset_file: str, DGH_folder: str, k: int, output_file: str
+):
+    """Clustering-based anonymization a dataset, given a set of DGHs.
 
     Args:
         raw_dataset_file (str): the path to the raw dataset file.
@@ -236,7 +258,10 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
         cluster_size = k
         clustering_heap = []
 
-        if len(unmarked_record_indices) // k == 1 and len(unmarked_record_indices) % k > 0:
+        if (
+            len(unmarked_record_indices) // k == 1
+            and len(unmarked_record_indices) % k > 0
+        ):
             cluster_size = len(unmarked_record_indices)
 
         rec = raw_dataset[first_unmarked_index]
@@ -247,8 +272,10 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
             record = raw_dataset[record_idx]
 
-            heapq.heappush(clustering_heap, [
-                calc_dist_between_records(rec, record, DGHs), record_idx, record])
+            heapq.heappush(
+                clustering_heap,
+                [calc_dist_between_records(rec, record, DGHs), record_idx, record],
+            )
 
         closest_entries = heapq.nsmallest(cluster_size - 1, clustering_heap)
         entry_cluster = closest_entries + [[-1, first_unmarked_index, rec]]
@@ -268,9 +295,10 @@ def clustering_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     write_dataset(anonymized_dataset, output_file)
 
 
-def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
-                       output_file: str):
-    """ Top-down anonymization a dataset, given a set of DGHs.
+def topdown_anonymizer(
+    raw_dataset_file: str, DGH_folder: str, k: int, output_file: str
+):
+    """Top-down anonymization a dataset, given a set of DGHs.
 
     Args:
         raw_dataset_file (str): the path to the raw dataset file.
@@ -286,13 +314,14 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
     SpecializationNode.RAW_DATASET = raw_dataset
 
     dgh_root_node_attributes_info = [
-        (DGH.root_node.attribute_name, DGH.root_node.value) for DGH in DGHs.values()]
+        (DGH.root_node.attribute_name, DGH.root_node.value) for DGH in DGHs.values()
+    ]
 
-    specialization_tree_root_node = SpecializationNode(
-        dgh_root_node_attributes_info)
+    specialization_tree_root_node = SpecializationNode(dgh_root_node_attributes_info)
 
     specialization_tree_leaf_nodes = specialize(
-        [specialization_tree_root_node], DGHs, k)
+        [specialization_tree_root_node], DGHs, k
+    )
 
     for specialization_node in specialization_tree_leaf_nodes:
         for record_idx, record in specialization_node.anonymized_records:
@@ -303,12 +332,13 @@ def topdown_anonymizer(raw_dataset_file: str, DGH_folder: str, k: int,
 
 if len(sys.argv) < 6:
     print(
-        f"Usage: python3 {sys.argv[0]} algorithm DGH-folder raw-dataset.csv anonymized.csv k")
+        f"Usage: python3 {sys.argv[0]} algorithm DGH-folder raw-dataset.csv anonymized.csv k"
+    )
     print(f"\tWhere algorithm is one of [clustering, random, topdown]")
     sys.exit(1)
 
 algorithm = sys.argv[1]
-if algorithm not in ['clustering', 'random', 'topdown']:
+if algorithm not in ["clustering", "random", "topdown"]:
     print("Invalid algorithm.")
     sys.exit(2)
 
@@ -329,7 +359,8 @@ elapsed_time = end_time - start_time
 cost_md = cost_MD(raw_file, anonymized_file, dgh_path)
 cost_lm = cost_LM(raw_file, anonymized_file, dgh_path)
 print(
-    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm:.2f}\n\tElapsed Time: {elapsed_time:.2f}s\n")
+    f"Results of {k}-anonimity:\n\tCost_MD: {cost_md}\n\tCost_LM: {cost_lm:.2f}\n\tElapsed Time: {elapsed_time:.2f}s\n"
+)
 
 # Sample usage:
 # python3 main.py clustering DGHs/ adult-hw1.csv result.csv 300

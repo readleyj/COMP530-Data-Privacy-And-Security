@@ -1,7 +1,6 @@
 def calculate_equivalence_class(DGHs, record_cluster):
     for attribute, dgh_info in DGHs.items():
-        attribute_values = tuple(record[attribute]
-                                 for record in record_cluster)
+        attribute_values = tuple(record[attribute] for record in record_cluster)
         lca_value = dgh_info.lowest_common_ancestor(attribute_values)
 
         for record in record_cluster:
@@ -25,6 +24,7 @@ def calc_dist_between_records(record1, record2, DGHs):
             raw_record, anonymized_record = raw_records[idx], anonymized_records[idx]
 
             total_MD_cost += dgh_info.level_dist_between_values(
-                raw_record[attribute], anonymized_record[attribute])
+                raw_record[attribute], anonymized_record[attribute]
+            )
 
     return total_MD_cost

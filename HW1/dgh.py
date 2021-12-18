@@ -72,8 +72,9 @@ class DGHInfo:
         if node.is_leaf:
             desc_leaf_count = 1
         else:
-            desc_leaf_count = sum([self._calc_desc_leaf_counts(child)
-                                   for child in node.children])
+            desc_leaf_count = sum(
+                [self._calc_desc_leaf_counts(child) for child in node.children]
+            )
 
         node.desc_leaf_count = desc_leaf_count
         return desc_leaf_count
@@ -86,6 +87,5 @@ class DGHInfo:
         self.value_to_node_map[value] = node
 
         for child in node.children:
-            child.ancestors = set.union(
-                node.ancestors, set([value, child.value]))
+            child.ancestors = set.union(node.ancestors, set([value, child.value]))
             self._traverse(child)
