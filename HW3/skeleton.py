@@ -1,11 +1,11 @@
 import sys
 import random
 
-import numpy as np
-import pandas as pd
+from collections import Counter
 import copy
 
-from collections import Counter
+import numpy as np
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder
@@ -13,17 +13,39 @@ from sklearn.metrics import accuracy_score
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.svm import SVC
+from sklearn.utils import shuffle
 
+MODELS = {
+    "DT": DecisionTreeClassifier(max_depth=5, random_state=0),
+    "LR": LogisticRegression(penalty="l2", tol=0.001, C=0.1, max_iter=100),
+    "SVC": SVC(C=0.5, kernel="poly", random_state=0),
+}
 
-###############################################################################
-############################### Label Flipping ################################
-###############################################################################
+LABEL_FLIPPING_NUM_RUNS = 100
 
 
 def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
-    # TODO: You need to implement this function!
-    # You may want to use copy.deepcopy() if you will modify data
-    return -999
+    model = MODELS[model_type]
+
+    num_instances = len(X_train)
+    num_to_flip = int(n * num_instances)
+
+    running_accuracy = 0.0
+
+    for _ in range(LABEL_FLIPPING_NUM_RUNS):
+        X_train, y_train = shuffle(X_train, y_train)
+
+        y_train[:num_to_flip] = np.absolute(
+            np.ones_like(num_to_flip) - y_train[:num_to_flip]
+        )
+
+        model.fit(X_train, y_train)
+        predictions = model.predict(X_test)
+        accuracy = accuracy_score(y_test, predictions)
+
+        running_accuracy += accuracy
+
+    return running_accuracy / LABEL_FLIPPING_NUM_RUNS
 
 
 ###############################################################################
