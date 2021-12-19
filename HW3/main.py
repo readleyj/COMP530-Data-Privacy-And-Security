@@ -22,6 +22,7 @@ MODELS = {
 }
 
 LABEL_FLIPPING_NUM_RUNS = 100
+EVASION_RANDOM_NOISE_VARIANCE = 1.5
 
 
 def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
@@ -74,9 +75,9 @@ def evade_model(trained_model, actual_example):
 
     while pred_class == actual_class:
         rand_idx = np.random.choice(range(num_features))
-        modified_example[rand_idx] += np.random.normal(0, 1.0)
-
-        # print(modified_example)
+        modified_example[rand_idx] = np.random.normal(
+            actual_example[rand_idx], EVASION_RANDOM_NOISE_VARIANCE
+        )
 
         pred_class = trained_model.predict([modified_example])[0]
 
