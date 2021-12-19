@@ -124,16 +124,13 @@ def evaluate_transferability(DTmodel, LRmodel, SVCmodel, actual_examples):
             )
 
 
-###############################################################################
-########################## Model Stealing #####################################
-###############################################################################
-
-
 def steal_model(remote_model, model_type, examples):
-    # TODO: You need to implement this function!
-    # This function should return the STOLEN model, but currently it returns the remote model
-    # You should change the return value once you have implemented your model stealing attack
-    return remote_model
+    remote_model_responses = remote_model.predict(examples)
+
+    stolen_model = MODELS[model_type]
+    stolen_model.fit(examples, remote_model_responses)
+
+    return stolen_model
 
 
 ###############################################################################
@@ -221,20 +218,20 @@ def main():
         myDEC, myLR, mySVC, X_test[num_examples : num_examples * 2]
     )
 
-    # # Model stealing:
-    # budgets = [5, 10, 20, 30, 50, 100, 200]
-    # for n in budgets:
-    #     print("******************************")
-    #     print("Number of queries used in model stealing attack:", n)
-    #     stolen_DT = steal_model(myDEC, "DT", X_test[0:n])
-    #     stolen_predict = stolen_DT.predict(X_test)
-    #     print("Accuracy of stolen DT: " + str(accuracy_score(y_test, stolen_predict)))
-    #     stolen_LR = steal_model(myLR, "LR", X_test[0:n])
-    #     stolen_predict = stolen_LR.predict(X_test)
-    #     print("Accuracy of stolen LR: " + str(accuracy_score(y_test, stolen_predict)))
-    #     stolen_SVC = steal_model(mySVC, "SVC", X_test[0:n])
-    #     stolen_predict = stolen_SVC.predict(X_test)
-    #     print("Accuracy of stolen SVC: " + str(accuracy_score(y_test, stolen_predict)))
+    # Model stealing:
+    budgets = [5, 10, 20, 30, 50, 100, 200]
+    for n in budgets:
+        print("******************************")
+        print("Number of queries used in model stealing attack:", n)
+        stolen_DT = steal_model(myDEC, "DT", X_test[0:n])
+        stolen_predict = stolen_DT.predict(X_test)
+        print("Accuracy of stolen DT: " + str(accuracy_score(y_test, stolen_predict)))
+        stolen_LR = steal_model(myLR, "LR", X_test[0:n])
+        stolen_predict = stolen_LR.predict(X_test)
+        print("Accuracy of stolen LR: " + str(accuracy_score(y_test, stolen_predict)))
+        stolen_SVC = steal_model(mySVC, "SVC", X_test[0:n])
+        stolen_predict = stolen_SVC.predict(X_test)
+        print("Accuracy of stolen SVC: " + str(accuracy_score(y_test, stolen_predict)))
 
 
 if __name__ == "__main__":
