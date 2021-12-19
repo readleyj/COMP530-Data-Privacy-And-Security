@@ -61,11 +61,6 @@ def backdoor_attack(X_train, y_train, model_type, num_samples):
     return -999
 
 
-###############################################################################
-############################## Evasion ########################################
-###############################################################################
-
-
 def evade_model(trained_model, actual_example):
     actual_class = trained_model.predict([actual_example])[0]
     modified_example = copy.deepcopy(actual_example)
@@ -96,16 +91,37 @@ def calc_perturbation(actual_example, adversarial_example):
         return tot / len(actual_example)
 
 
-###############################################################################
-############################## Transferability ################################
-###############################################################################
-
-
 def evaluate_transferability(DTmodel, LRmodel, SVCmodel, actual_examples):
-    # TODO: You need to implement this function!
-    print(
-        "Here, you need to conduct some experiments related to transferability and print their results..."
-    )
+    original_models = [("DT", DTmodel), ("LR", LRmodel), ("SVC", SVCmodel)]
+    num_examples = len(actual_examples)
+
+    for original_model_name, original_model in original_models:
+        secondary_models = [
+            (model_name, model)
+            for (model_name, model) in original_models
+            if model_name != original_model_name
+        ]
+
+        adversarial_examples = [
+            evade_model(original_model, example) for example in actual_examples
+        ]
+        original_model_predictions = original_model.predict(adversarial_examples)
+
+        for secondary_model_name, secondary_model in secondary_models:
+            secondary_model_predictions = secondary_model.predict(adversarial_examples)
+
+            num_successful_transfers = sum(
+                [
+                    int(original_model_pred == secondary_model_pred)
+                    for (original_model_pred, secondary_model_pred) in zip(
+                        original_model_predictions, secondary_model_predictions
+                    )
+                ]
+            )
+
+            print(
+                f"{num_successful_transfers} examples out of {num_examples} transferred from {original_model_name} to {secondary_model_name}"
+            )
 
 
 ###############################################################################
