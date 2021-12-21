@@ -1,7 +1,3 @@
-import sys
-import random
-
-from collections import Counter
 import copy
 
 import numpy as np
@@ -70,11 +66,6 @@ def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
     return running_accuracy / LABEL_FLIPPING_NUM_RUNS
 
 
-###############################################################################
-################################## Backdoor ###################################
-###############################################################################
-
-
 def backdoor_attack(X_train, y_train, model_type, num_samples):
     model = MODELS[model_type]
     num_features = np.shape(X_train)[1]
@@ -120,7 +111,6 @@ def evade_model(trained_model, actual_example):
 
 
 def calc_perturbation(actual_example, adversarial_example):
-    # You do not need to modify this function.
     if len(actual_example) != len(adversarial_example):
         print("Number of features is different, cannot calculate perturbation amount.")
         return -999
@@ -171,14 +161,6 @@ def steal_model(remote_model, model_type, examples):
     stolen_model.fit(examples, remote_model_responses)
 
     return stolen_model
-
-
-###############################################################################
-############################### Main ##########################################
-###############################################################################
-
-## DO NOT MODIFY CODE BELOW THIS LINE. FEATURES, TRAIN/TEST SPLIT SIZES, ETC. SHOULD STAY THIS WAY. ##
-## JUST COMMENT OR UNCOMMENT PARTS YOU NEED. ##
 
 
 def main():
