@@ -22,7 +22,28 @@ MODELS = {
 }
 
 LABEL_FLIPPING_NUM_RUNS = 100
+
 EVASION_RANDOM_NOISE_VARIANCE = 1.5
+
+BACKDOOR_TRIGGER_FLAG = 1000
+BACKDOOR_NUM_FLAGGED_FEATURES = 2
+BACKDOOR_RANDOM_NOISE_VARIANCE = 5.0
+BACKDOOR_NUM_TEST_SAMPLES = 1000
+
+
+def generate_backdoored_samples(num_samples, num_features):
+    backdoored_x_samples = []
+    backdoored_y_samples = np.ones(num_samples)
+
+    for _ in range(num_samples):
+        sample = np.random.normal(0, BACKDOOR_RANDOM_NOISE_VARIANCE, num_features)
+        sample[:BACKDOOR_NUM_FLAGGED_FEATURES] = BACKDOOR_TRIGGER_FLAG
+
+        backdoored_x_samples.append(sample)
+
+    backdoored_x_samples = np.reshape(backdoored_x_samples, (-1, num_features))
+
+    return backdoored_x_samples, backdoored_y_samples
 
 
 def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
@@ -55,10 +76,29 @@ def attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n):
 
 
 def backdoor_attack(X_train, y_train, model_type, num_samples):
+    model = MODELS[model_type]
+    num_features = np.shape(X_train)[1]
 
-    # TODO: You need to implement this function!
-    # You may want to use copy.deepcopy() if you will modify data
-    return -999
+    backdoored_X_train = copy.deepcopy(X_train)
+    backdoored_y_train = copy.deepcopy(y_train)
+
+    backdoored_x_samples, backdoored_y_samples = generate_backdoored_samples(
+        num_samples, num_features
+    )
+
+    backdoored_X_train = np.append(backdoored_X_train, backdoored_x_samples, axis=0)
+    backdoored_y_train = np.append(backdoored_y_train, backdoored_y_samples, axis=0)
+
+    backdoored_model = model.fit(backdoored_X_train, backdoored_y_train)
+
+    backdoored_X_test, backdoored_y_test = generate_backdoored_samples(
+        BACKDOOR_NUM_TEST_SAMPLES, num_features
+    )
+
+    predictions = backdoored_model.predict(backdoored_X_test)
+    accuracy = accuracy_score(backdoored_y_test, predictions)
+
+    return accuracy
 
 
 def evade_model(trained_model, actual_example):
@@ -173,26 +213,26 @@ def main():
     print("Accuracy of SVC: " + str(accuracy_score(y_test, SVC_predict)))
 
     # Label flipping attack executions:
-    # model_types = ["DT", "LR", "SVC"]
-    # n_vals = [0.05, 0.10, 0.20, 0.40]
-    # for model_type in model_types:
-    #     for n in n_vals:
-    #         acc = attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n)
-    #         print("Accuracy of poisoned", model_type, str(n), ":", acc)
+    model_types = ["DT", "LR", "SVC"]
+    n_vals = [0.05, 0.10, 0.20, 0.40]
+    for model_type in model_types:
+        for n in n_vals:
+            acc = attack_label_flipping(X_train, X_test, y_train, y_test, model_type, n)
+            print("Accuracy of poisoned", model_type, str(n), ":", acc)
 
-    # # Backdoor attack executions:
-    # counts = [0, 1, 3, 5, 10]
-    # for model_type in model_types:
-    #     for num_samples in counts:
-    #         success_rate = backdoor_attack(X_train, y_train, model_type, num_samples)
-    #         print(
-    #             "Success rate of backdoor:",
-    #             success_rate,
-    #             "model_type:",
-    #             model_type,
-    #             "num_samples:",
-    #             num_samples,
-    #         )
+    # Backdoor attack executions:
+    counts = [0, 1, 3, 5, 10]
+    for model_type in model_types:
+        for num_samples in counts:
+            success_rate = backdoor_attack(X_train, y_train, model_type, num_samples)
+            print(
+                "Success rate of backdoor:",
+                success_rate,
+                "model_type:",
+                model_type,
+                "num_samples:",
+                num_samples,
+            )
 
     # Evasion attack executions:
     trained_models = [myDEC, myLR, mySVC]
