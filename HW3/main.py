@@ -125,6 +125,9 @@ def evaluate_transferability(DTmodel, LRmodel, SVCmodel, actual_examples):
     original_models = [("DT", DTmodel), ("LR", LRmodel), ("SVC", SVCmodel)]
     num_examples = len(actual_examples)
 
+    total_successful_transfers = 0
+    num_model_pairs_evaluated = 0
+
     for original_model_name, original_model in original_models:
         secondary_models = [
             (model_name, model)
@@ -149,9 +152,18 @@ def evaluate_transferability(DTmodel, LRmodel, SVCmodel, actual_examples):
                 ]
             )
 
+            total_successful_transfers += num_successful_transfers
+            num_model_pairs_evaluated += 1
+
             print(
                 f"{num_successful_transfers} examples out of {num_examples} transferred from {original_model_name} to {secondary_model_name}"
             )
+
+        transferability_metric = total_successful_transfers / num_model_pairs_evaluated
+
+        print(
+            f"Cross-model transferability of evasion attack is {transferability_metric}"
+        )
 
 
 def steal_model(remote_model, model_type, examples):
