@@ -2,12 +2,14 @@ import hashlib
 import csv
 
 DICTIONARY_ATTACK_FILE_PATH = "rockyou.txt"
-OUTPUT_TABLE_PATH = "attack_table.csv"
-OUTPUT_TABLE_HEADER = ["Password", "Hash"]
 
-USERNAME_PASSWORD_TABLE_PATH = "digitalcorp.txt"
 
-if __name__ == "__main__":
+def unsalted_dictionary_attack():
+    OUTPUT_TABLE_PATH = "attack_table.csv"
+    OUTPUT_TABLE_HEADER = ["Password", "Hash"]
+
+    USERNAME_PASSWORD_TABLE_PATH = "digitalcorp.txt"
+
     with open(DICTIONARY_ATTACK_FILE_PATH) as file:
         lines = file.readlines()
         passwords = [line.rstrip() for line in lines]
@@ -28,12 +30,20 @@ if __name__ == "__main__":
 
     with open(USERNAME_PASSWORD_TABLE_PATH) as csv_file:
         csv_reader = csv.reader(csv_file, delimiter=',')
-        line_count = 0
+        next(csv_reader)
 
         for row in csv_reader:
-            if line_count >= 1:
-                print(f'User {row[0]} has password {hash_to_password_dict[row[1]]} that was matched to hash {row[1]}')
+            print(f'User {row[0]} has password {hash_to_password_dict[row[1]]} that was matched to hash {row[1]}')
 
-            line_count += 1
+def salted_dictionary_attack():
+    USERNAME_PASSWORD_TABLE_PATH = "salty-digitalcorp.txt"
 
+    with open(USERNAME_PASSWORD_TABLE_PATH) as csv_file:
+        csv_reader = csv.reader(csv_file, delimiter=',')
+        next(csv_reader)
 
+        for username, salt, hash in csv_reader:
+            pass
+
+if __name__ == "__main__":
+    unsalted_dictionary_attack()
