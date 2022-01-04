@@ -43,7 +43,14 @@ def salted_dictionary_attack():
         next(csv_reader)
 
         for username, salt, hash in csv_reader:
-            pass
+                with open(DICTIONARY_ATTACK_FILE_PATH) as file:
+                    lines = file.readlines()
+                    passwords = [line.rstrip() for line in lines]
+
+                attack_table = {hashlib.sha512((salt + password).encode('utf-8')).hexdigest(): password for password in passwords}
+
+                print(f'User {username} has password {attack_table[hash]} that was matched to hash {hash} with salt {salt}')
 
 if __name__ == "__main__":
-    unsalted_dictionary_attack()
+    
+    salted_dictionary_attack()
