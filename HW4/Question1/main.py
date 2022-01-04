@@ -52,5 +52,8 @@ def salted_dictionary_attack():
                 print(f'User {username} has password {attack_table[hash]} that was matched to hash {hash} with salt {salt}')
 
 if __name__ == "__main__":
+    print("Running unsalted dictionary attack\n")
+    unsalted_dictionary_attack()
 
+    print("Running salted dictionary attack\n")
     salted_dictionary_attack()
