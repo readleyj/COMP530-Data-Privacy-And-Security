@@ -32,8 +32,8 @@ def unsalted_dictionary_attack():
         csv_reader = csv.reader(csv_file, delimiter=',')
         next(csv_reader)
 
-        for row in csv_reader:
-            print(f'User {row[0]} has password {hash_to_password_dict[row[1]]} that was matched to hash {row[1]}')
+        for username, hash in csv_reader:
+            print(f'User {username} has password {hash_to_password_dict[hash]} that was matched to hash {hash}')
 
 def salted_dictionary_attack():
     USERNAME_PASSWORD_TABLE_PATH = "salty-digitalcorp.txt"
@@ -52,5 +52,5 @@ def salted_dictionary_attack():
                 print(f'User {username} has password {attack_table[hash]} that was matched to hash {hash} with salt {salt}')
 
 if __name__ == "__main__":
-    
+
     salted_dictionary_attack()
